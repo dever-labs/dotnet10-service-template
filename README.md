@@ -29,7 +29,7 @@ This template follows **Clean Architecture** (also known as Onion Architecture):
 ┌────────────────────────────────────────┐
 │               Api (Entry Point)        │  Minimal APIs, middleware, DI wiring
 ├────────────────────────────────────────┤
-│            Application Layer           │  CQRS (MediatR), validators, DTOs
+│            Application Layer           │  CQRS (ISender/IRequestHandler), validators, DTOs
 ├────────────────────────────────────────┤
 │              Domain Layer              │  Entities, value objects, domain errors
 ├────────────────────────────────────────┤
@@ -38,7 +38,7 @@ This template follows **Clean Architecture** (also known as Onion Architecture):
 ```
 
 **Key design decisions:**
-- **CQRS via MediatR** — commands and queries are separate, with pipeline behaviors for logging and validation
+- **Custom CQRS** — commands and queries dispatched via `ISender.SendAsync()` / `IRequestHandler.HandleAsync()`, with pipeline behaviors for logging and validation (MediatR is commercial — not used)
 - **Result<T> pattern** — no exceptions for expected failure paths; errors flow as values
 - **Testcontainers** — integration and acceptance tests spin up real PostgreSQL containers
 - **OpenTelemetry** — traces, metrics, and logs exported via OTLP
@@ -108,7 +108,7 @@ The API is now available at `http://localhost:5000`.
 ├── docs/adr/                   # Architecture Decision Records
 ├── src/
 │   ├── Api/                    # ASP.NET Core Minimal API, Program.cs
-│   ├── Application/            # MediatR CQRS, validators, DTOs
+│   ├── Application/            # Custom CQRS (ISender/IRequestHandler), validators, DTOs
 │   ├── Domain/                 # Entities, domain errors, Result<T>
 │   └── Infrastructure/         # EF Core, PostgreSQL, repositories
 ├── tests/

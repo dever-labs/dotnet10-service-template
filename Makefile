@@ -4,7 +4,7 @@ SHELL := /bin/bash
 
 # ── Variables ──────────────────────────────────────────────────────────────────
 PROJECT        := ServiceTemplate
-SOLUTION       := ServiceTemplate.sln
+SOLUTION       := ServiceTemplate.slnx
 SRC_API        := src/Api
 DOCKER_IMAGE   := service-template
 VERSION        ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "0.0.1-local")
