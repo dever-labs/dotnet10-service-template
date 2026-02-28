@@ -119,6 +119,54 @@ envFromSecret:
 configMap:
   data:
     OpenTelemetry__ServiceName: service-template
+    # Points to the collector Service; fullnameOverride below keeps this predictable
+    # regardless of the Helm release name.
+    OpenTelemetry__OtlpEndpoint: "http://otel-collector:4317"
+
+# ── OpenTelemetry Collector subchart ─────────────────────────────────────────
+# Deployed alongside the app within the same release.
+# Disable when a cluster-wide / DaemonSet collector already exists.
+opentelemetry-collector:
+  enabled: true
+  # Fix the Service name so the app can always reach http://otel-collector:4317
+  # regardless of the Helm release name.
+  fullnameOverride: otel-collector
+  mode: deployment
+  replicaCount: 1
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+    processors:
+      batch:
+        timeout: 1s
+        send_batch_size: 1024
+    exporters:
+      debug:
+        verbosity: normal
+      # Replace / add exporters for your backend, e.g.:
+      # otlp/grafana:
+      #   endpoint: https://otlp-gateway.grafana.net/otlp
+      #   headers:
+      #     authorization: Basic <base64(instanceId:apiKey)>
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug]
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug]
+        logs:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug]
 
 # Topology spread constraints for HA across zones
 topologySpreadConstraints:

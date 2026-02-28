@@ -44,6 +44,8 @@ services:
     restart: unless-stopped
 
   otel-collector:
+    # Local dev only — Kubernetes uses the opentelemetry-collector Helm subchart.
+    # Config mirrors deploy/helm/chart/values.yaml opentelemetry-collector.config.
     image: otel/opentelemetry-collector-contrib:latest
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:

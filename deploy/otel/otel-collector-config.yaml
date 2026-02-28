@@ -1,3 +1,7 @@
+# Local development collector config — used by docker-compose only.
+# For Kubernetes, the collector is deployed as a Helm subchart; its config
+# lives in deploy/helm/chart/values.yaml under opentelemetry-collector.config.
+
 receivers:
   otlp:
     protocols:
