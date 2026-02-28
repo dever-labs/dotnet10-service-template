@@ -1,0 +1,76 @@
+version: 2
+updates:
+  # ── NuGet (.NET) ─────────────────────────────────────────────────────────────
+  # Dependabot reads Directory.Packages.props (Central Package Management) and
+  # opens ONE PR per package upgrade regardless of how many projects use it.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: UTC
+    open-pull-requests-limit: 10
+    groups:
+      # Batch all Microsoft.EntityFrameworkCore.* upgrades into a single PR
+      entity-framework:
+        patterns:
+          - "Microsoft.EntityFrameworkCore*"
+          - "Npgsql.EntityFrameworkCore*"
+      # Batch all OpenTelemetry.* upgrades into a single PR
+      opentelemetry:
+        patterns:
+          - "OpenTelemetry*"
+      # Batch all test tooling upgrades into a single PR
+      test-tooling:
+        patterns:
+          - "Microsoft.NET.Test.Sdk"
+          - "xunit*"
+          - "coverlet*"
+          - "FluentAssertions"
+          - "NSubstitute*"
+          - "Bogus"
+          - "Testcontainers*"
+          - "Respawn"
+    labels:
+      - dependencies
+      - dotnet
+
+  # ── GitHub Actions ────────────────────────────────────────────────────────────
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: UTC
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+
+  # ── Helm chart dependencies ───────────────────────────────────────────────────
+  - package-ecosystem: helm
+    directory: /deploy/helm/chart
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: UTC
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - helm
+
+  # ── Docker base images ────────────────────────────────────────────────────────
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: UTC
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - docker
