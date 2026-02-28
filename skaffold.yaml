@@ -18,10 +18,10 @@ deploy:
   helm:
     releases:
       - name: service-template
-        chartPath: deploy/helm/chart
+        chartPath: charts
         valuesFiles:
-          - deploy/helm/chart/values.yaml
-          - deploy/helm/chart/values.local.yaml
+          - charts/values.yaml
+          - charts/values.local.yaml
         # Skaffold injects the built image tag by matching image.repository in values.local.yaml
         # against the artifact image name above. The tag is set automatically on each build.
         setValueTemplates:

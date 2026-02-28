@@ -10,7 +10,7 @@ VERSION        ?= $(shell git describe --tags --always --dirty 2>/dev/null || ec
 CLUSTER_NAME   := service-template
 REGISTRY       := localhost:5001
 IMAGE          := $(REGISTRY)/service-template
-HELM_CHART     := deploy/helm/chart
+HELM_CHART     := charts
 HELM_RELEASE   := service-template
 NAMESPACE      := default
 

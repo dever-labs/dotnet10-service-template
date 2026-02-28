@@ -44,7 +44,7 @@ helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm
 helm repo update
 
 echo "→ Updating Helm chart dependencies..."
-helm dependency update deploy/helm/chart
+helm dependency update charts
 
 echo ""
 echo "✅ Dev container ready!"

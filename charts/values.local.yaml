@@ -2,9 +2,9 @@
 #
 # Applied on top of values.yaml by skaffold and make targets:
 #   skaffold dev
-#   helm upgrade --install service-template deploy/helm/chart \
-#     -f deploy/helm/chart/values.yaml \
-#     -f deploy/helm/chart/values.local.yaml
+#   helm upgrade --install service-template charts \
+#     -f charts/values.yaml \
+#     -f charts/values.local.yaml
 #
 # DO NOT use in staging or production.
 

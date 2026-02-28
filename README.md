@@ -213,18 +213,17 @@ make helm-template
 # Package
 make helm-package
 
-# Deploy to a cluster (staging)
-helm upgrade --install my-service deploy/helm/chart \
-  -f deploy/helm/chart/values.staging.yaml \
+# Deploy to staging
+helm upgrade --install my-service charts \
+  -f charts/values.yaml \
+  -f charts/values.staging.yaml \
   --set image.tag=1.2.3 \
   --namespace my-namespace --create-namespace
-
-# Deploy to production
-helm upgrade --install my-service deploy/helm/chart \
-  -f deploy/helm/chart/values.production.yaml \
-  --set image.tag=1.2.3 \
-  --namespace production
 ```
+
+> **Production values are not stored in this repo.**  
+> Production deployments are managed via a dedicated GitOps repository that references the
+> Helm chart and container image released from here. Supply your production values there.
 
 **The chart includes:**
 - Deployment with rolling updates and `maxUnavailable: 0`

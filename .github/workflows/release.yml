@@ -115,10 +115,10 @@ jobs:
 
       - name: Update chart image tag
         run: |
-          sed -i "s/tag: .*/tag: \"${{ steps.version.outputs.VERSION }}\"/" deploy/helm/chart/values.yaml
+          sed -i "s/tag: .*/tag: \"${{ steps.version.outputs.VERSION }}\"/" charts/values.yaml
 
       - name: Package Helm chart
-        run: helm package deploy/helm/chart --version ${{ steps.version.outputs.VERSION }} --app-version ${{ steps.version.outputs.VERSION }}
+        run: helm package charts --version ${{ steps.version.outputs.VERSION }} --app-version ${{ steps.version.outputs.VERSION }}
 
       - name: Push Helm chart
         run: helm push *.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/helm-charts
