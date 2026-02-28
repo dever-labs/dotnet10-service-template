@@ -1,0 +1,65 @@
+name: Bug report
+description: Something is not working as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Fill in as much detail as possible. The more context you provide, the easier it is for a developer — or the Copilot coding agent — to fix the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+      placeholder: "When I call POST /api/todos with an empty title, I expect a 400 but I get a 500."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      description: What should have happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Exact steps, HTTP requests, or code snippets to reproduce the issue.
+      placeholder: |
+        1. POST /api/todos with body `{"title": ""}`
+        2. Observe 500 response
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or error output
+      description: Paste any relevant logs, stack traces, or error messages.
+      render: text
+
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Likely affected layer
+      description: Which layer do you think the bug is in?
+      options:
+        - API / Endpoints
+        - Application / Handlers
+        - Domain / Business logic
+        - Infrastructure / Database
+        - Unknown
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "local / staging / production"
+    validations:
+      required: true

@@ -1,0 +1,60 @@
+name: Feature request
+description: Propose a new feature or change to existing behaviour
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe your feature clearly. Well-structured issues can be picked up directly by the Copilot coding agent — assign the issue to `@copilot` once submitted.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What problem does this solve? Why is it needed?
+      placeholder: "As a user, I need to set a priority on todos so I can sort my work by urgency."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the behaviour you want. Include API shape, domain rules, or UI changes.
+      placeholder: |
+        - Add a `Priority` field (integer 1–5) to the Todo aggregate
+        - Include it in `CreateTodoCommand` and `UpdateTodoCommand`
+        - Return it in `TodoResponse`
+        - Add GET /api/todos?priority=1 filter
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Specific, testable conditions that must be true for this to be considered done.
+      placeholder: |
+        - [ ] Priority 1–5 is accepted; priority 0 or 6 returns 400
+        - [ ] Priority is returned in all GET responses
+        - [ ] Existing todos without priority default to null
+        - [ ] Unit and integration tests cover all cases
+    validations:
+      required: true
+
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Is this a breaking change?
+      options:
+        - "No"
+        - "Yes — requires migration only"
+        - "Yes — breaks existing API contract"
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Any other notes, related issues, or design constraints.

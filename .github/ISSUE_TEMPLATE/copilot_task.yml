@@ -1,0 +1,69 @@
+name: Copilot coding agent task
+description: A well-scoped task ready to be assigned to the GitHub Copilot coding agent
+labels: [copilot]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🤖 Copilot coding agent task
+
+        This template creates a task that can be assigned directly to `@copilot`.
+        The Copilot coding agent will read `AGENTS.md` and the instructions in `.github/copilot-instructions.md`,
+        then implement the task, run the tests, and open a PR.
+
+        **Tips for best results:**
+        - Be specific about file paths, method names, and expected behaviour
+        - Include acceptance criteria the agent can verify by running tests
+        - Scope to a single, cohesive change
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: One clear sentence describing what needs to be done.
+      placeholder: "Add a `Priority` field (1–5) to the Todo aggregate, commands, and API endpoint."
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation steps
+      description: |
+        Ordered list of steps. The agent will follow these.
+        Reference specific files where possible.
+      placeholder: |
+        1. Add `Priority` property to `src/Domain/Todos/Todo.cs` — validate 1–5 in `Create()` and `Update()`
+        2. Add `TodoErrors.InvalidPriority` to `src/Domain/Todos/TodoErrors.cs`
+        3. Add `Priority` to `CreateTodoCommand`, `UpdateTodoCommand`, and `TodoResponse`
+        4. Update `CreateTodoCommandValidator` and `UpdateTodoCommandValidator`
+        5. Update `src/Infrastructure/Persistence/Configurations/TodoConfiguration.cs`
+        6. Run `make migration NAME=AddTodoPriority`
+        7. Update API endpoints in `src/Api/Endpoints/TodoEndpoints.cs`
+        8. Add/update unit tests in `tests/UnitTests/Todos/`
+        9. Add/update integration tests in `tests/IntegrationTests/Todos/`
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria (verifiable by tests)
+      description: These must all be true. The agent should write tests that assert each one.
+      placeholder: |
+        - [ ] `make build` passes with zero warnings
+        - [ ] `make test` passes (all unit tests green)
+        - [ ] Priority outside 1–5 returns `Error.Validation`
+        - [ ] Priority is nullable (existing todos unaffected)
+        - [ ] `TodoResponse` includes `priority` field
+    validations:
+      required: true
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints and notes
+      description: Things the agent must NOT do, or edge cases to be aware of.
+      placeholder: |
+        - Do not change the database column name (must be `priority` not `todo_priority`)
+        - Do not make Priority required — it is optional
