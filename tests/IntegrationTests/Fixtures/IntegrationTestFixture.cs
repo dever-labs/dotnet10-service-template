@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Npgsql;
 using Respawn;
 using ServiceTemplate.Infrastructure.Persistence;
 using Testcontainers.PostgreSql;
@@ -53,12 +54,22 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.MigrateAsync();
 
-        _respawner = await Respawner.CreateAsync(
-            _dbContainer.GetConnectionString(),
-            new RespawnerOptions { DbAdapter = DbAdapter.Postgres });
+        // Respawn requires an open DbConnection for non-SQL Server adapters
+        await using var conn = new NpgsqlConnection(_dbContainer.GetConnectionString());
+        await conn.OpenAsync();
+        _respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
+        {
+            DbAdapter = DbAdapter.Postgres,
+            SchemasToInclude = ["public"],
+        });
     }
 
-    public async Task ResetDatabaseAsync() => await _respawner.ResetAsync(_dbContainer.GetConnectionString());
+    public async Task ResetDatabaseAsync()
+    {
+        await using var conn = new NpgsqlConnection(_dbContainer.GetConnectionString());
+        await conn.OpenAsync();
+        await _respawner.ResetAsync(conn);
+    }
 
     public async Task DisposeAsync()
     {
