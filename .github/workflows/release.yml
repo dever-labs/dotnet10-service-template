@@ -159,24 +159,24 @@ jobs:
 
       - name: Update chart image tag
         run: |
-          sed -i "s/tag: .*/tag: \"${{ steps.version.outputs.VERSION }}\"/" charts/values.yaml
+          sed -i "s/tag: .*/tag: \"${{ steps.version.outputs.VERSION }}\"/" deploy/helm/values.yaml
 
       - name: Package Helm chart
-        run: helm package charts --version ${{ steps.version.outputs.VERSION }} --app-version ${{ steps.version.outputs.VERSION }}
+        run: helm package deploy/helm --version ${{ steps.version.outputs.VERSION }} --app-version ${{ steps.version.outputs.VERSION }}
 
       - name: Push Helm chart
         run: helm push *.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/helm-charts
 
       - name: Build fake chart
         run: |
-          cp -r charts charts-fake
+          cp -r deploy/helm deploy-helm-fake
           yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' \
-            charts/values.yaml charts/values-fake.yaml \
-            > charts-fake/values.yaml
-          rm charts-fake/values-fake.yaml
-          sed -i "s/tag: .*/tag: \"${{ steps.version.outputs.VERSION }}\"/" charts-fake/values.yaml
-          yq -i '.name = "service-template-fake"' charts-fake/Chart.yaml
-          helm package charts-fake --version ${{ steps.version.outputs.VERSION }} --app-version ${{ steps.version.outputs.VERSION }}
+            deploy/helm/values.yaml deploy/helm/values-fake.yaml \
+            > deploy-helm-fake/values.yaml
+          rm deploy-helm-fake/values-fake.yaml
+          sed -i "s/tag: .*/tag: \"${{ steps.version.outputs.VERSION }}\"/" deploy-helm-fake/values.yaml
+          yq -i '.name = "service-template-fake"' deploy-helm-fake/Chart.yaml
+          helm package deploy-helm-fake --version ${{ steps.version.outputs.VERSION }} --app-version ${{ steps.version.outputs.VERSION }}
 
       - name: Push fake Helm chart
         run: helm push service-template-fake-*.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/helm-charts
