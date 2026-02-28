@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ServiceTemplate.Application.Common.Interfaces;
-using ServiceTemplate.Infrastructure.AI;
 using ServiceTemplate.Infrastructure.Persistence;
 using ServiceTemplate.Infrastructure.Persistence.Repositories;
 
@@ -24,10 +23,6 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AppDbContext>());
         services.AddScoped<ITodoRepository, TodoRepository>();
-
-        services.Configure<GitHubModelsOptions>(
-            configuration.GetSection(GitHubModelsOptions.SectionName));
-        services.AddHttpClient<GitHubModelsClient>();
 
         return services;
     }
