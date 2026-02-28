@@ -1,0 +1,23 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisMode>All</AnalysisMode>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- Version stamp from CI -->
+    <Version Condition="'$(VERSION)' != ''">$(VERSION)</Version>
+    <Version Condition="'$(VERSION)' == ''">0.0.1-local</Version>
+
+    <!-- Deterministic builds -->
+    <Deterministic>true</Deterministic>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <!-- Shared analyzers for all projects -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" PrivateAssets="All" />
+  </ItemGroup>
+</Project>

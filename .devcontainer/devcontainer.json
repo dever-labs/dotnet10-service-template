@@ -1,0 +1,55 @@
+{
+  "name": "ServiceTemplate Dev",
+  "dockerComposeFile": ["../docker-compose.yml", "docker-compose.devcontainer.yml"],
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace",
+
+  "features": {
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "10.0"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "streetsidesoftware.code-spell-checker",
+        "editorconfig.editorconfig",
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "humao.rest-client"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.formatOnPaste": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit"
+        },
+        "dotnet.defaultSolution": "ServiceTemplate.sln",
+        "omnisharp.enableRoslynAnalyzers": true,
+        "omnisharp.enableEditorConfigSupport": true,
+        "files.exclude": {
+          "**/bin": true,
+          "**/obj": true
+        }
+      }
+    }
+  },
+
+  "postCreateCommand": "dotnet restore && dotnet tool restore",
+  "postStartCommand": "echo '\\n✅ Dev container ready! Run: make setup\\n'",
+
+  "remoteUser": "vscode",
+  "forwardPorts": [8080, 5432, 5341]
+}

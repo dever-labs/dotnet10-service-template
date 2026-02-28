@@ -1,0 +1,13 @@
+apiVersion: v2
+name: service-template
+description: A production-ready .NET 10 service Helm chart
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - dotnet
+  - api
+  - service
+maintainers:
+  - name: Platform Team
+    email: platform@your-org.com

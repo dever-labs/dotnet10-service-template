@@ -1,0 +1,14 @@
+<Project>
+  <!-- Inherit root settings -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <!-- For test projects, audit only directly referenced packages.
+         Transitive vulnerabilities (e.g. from Testcontainers, Respawn)
+         are tracked but should not block development. -->
+    <NuGetAuditMode>direct</NuGetAuditMode>
+
+    <!-- Reduce noise from XML doc generation in test projects -->
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+</Project>

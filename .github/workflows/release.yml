@@ -1,0 +1,148 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ── Full test suite ──────────────────────────────────────────────────────────
+  test:
+    name: Run All Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore & Build
+        run: dotnet restore && dotnet build -c Release --no-restore -p:TreatWarningsAsErrors=true
+
+      - name: Unit Tests
+        run: dotnet test tests/UnitTests -c Release --no-build
+
+      - name: Acceptance Tests
+        run: dotnet test tests/AcceptanceTests -c Release --no-build
+
+  # ── Build & Push Docker image ────────────────────────────────────────────────
+  docker:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image-digest: ${{ steps.build.outputs.digest }}
+      image-tags: ${{ steps.meta.outputs.tags }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,prefix=sha-
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: VERSION=${{ steps.version.outputs.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+
+  # ── Package & Push Helm Chart ────────────────────────────────────────────────
+  helm:
+    name: Package & Push Helm Chart
+    runs-on: ubuntu-latest
+    needs: docker
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR (Helm OCI)
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ${{ env.REGISTRY }} --username ${{ github.actor }} --password-stdin
+
+      - name: Update chart image tag
+        run: |
+          sed -i "s/tag: .*/tag: \"${{ steps.version.outputs.VERSION }}\"/" deploy/helm/chart/values.yaml
+
+      - name: Package Helm chart
+        run: helm package deploy/helm/chart --version ${{ steps.version.outputs.VERSION }} --app-version ${{ steps.version.outputs.VERSION }}
+
+      - name: Push Helm chart
+        run: helm push *.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/helm-charts
+
+  # ── Create GitHub Release ────────────────────────────────────────────────────
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [docker, helm]
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          body: |
+            ## Docker Image
+            ```
+            docker pull ${{ needs.docker.outputs.image-tags }}
+            ```
+            ## Helm Chart
+            ```sh
+            helm install my-release oci://ghcr.io/${{ github.repository_owner }}/helm-charts/chart
+            ```

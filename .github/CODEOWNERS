@@ -1,0 +1,8 @@
+# Code owners — these users will be requested for review automatically
+# See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+* @your-org/platform-team
+
+/deploy/helm/         @your-org/platform-team
+/.github/             @your-org/platform-team
+/src/Infrastructure/  @your-org/platform-team
