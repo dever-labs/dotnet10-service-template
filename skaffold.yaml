@@ -21,7 +21,7 @@ deploy:
         chartPath: charts
         valuesFiles:
           - charts/values.yaml
-          - charts/values.local.yaml
+          - values.local.yaml
         # Skaffold injects the built image tag by matching image.repository in values.local.yaml
         # against the artifact image name above. The tag is set automatically on each build.
         setValueTemplates:

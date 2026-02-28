@@ -216,7 +216,7 @@ make helm-package
 # Deploy to staging
 helm upgrade --install my-service charts \
   -f charts/values.yaml \
-  -f charts/values.staging.yaml \
+  -f values.staging.yaml \
   --set image.tag=1.2.3 \
   --namespace my-namespace --create-namespace
 ```

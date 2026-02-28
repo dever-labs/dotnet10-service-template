@@ -22,13 +22,13 @@ jobs:
           global-json-file: global.json
 
       - name: Restore NuGet packages
-        run: dotnet restore ServiceTemplate.slnx
+        run: dotnet restore ServiceTemplate.sln
 
       - name: Install dotnet tools
         run: dotnet tool restore
 
       - name: Build solution
-        run: dotnet build ServiceTemplate.slnx -c Release --no-restore
+        run: dotnet build ServiceTemplate.sln -c Release --no-restore
 
       - name: Verify unit tests pass
         run: dotnet test tests/UnitTests/ServiceTemplate.UnitTests.csproj --no-build -c Release

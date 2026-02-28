@@ -4,7 +4,7 @@ SHELL := /bin/bash
 
 # ── Variables ──────────────────────────────────────────────────────────────────
 PROJECT        := ServiceTemplate
-SOLUTION       := ServiceTemplate.slnx
+SOLUTION       := ServiceTemplate.sln
 SRC_API        := src/Api
 VERSION        ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "0.0.1-local")
 CLUSTER_NAME   := service-template
@@ -167,20 +167,20 @@ helm-deps: ## Download/update Helm chart dependencies (subcharts)
 
 .PHONY: helm-lint
 helm-lint: ## Lint the Helm chart
-	helm lint $(HELM_CHART) -f $(HELM_CHART)/values.local.yaml
+	helm lint $(HELM_CHART) -f values.local.yaml
 
 .PHONY: helm-template
 helm-template: ## Render Helm templates with local values (dry run)
 	helm template $(HELM_RELEASE) $(HELM_CHART) \
 		-f $(HELM_CHART)/values.yaml \
-		-f $(HELM_CHART)/values.local.yaml \
+		-f values.local.yaml \
 		--debug
 
 .PHONY: helm-install
 helm-install: ## Install chart to local cluster
 	helm upgrade --install $(HELM_RELEASE) $(HELM_CHART) \
 		-f $(HELM_CHART)/values.yaml \
-		-f $(HELM_CHART)/values.local.yaml \
+		-f values.local.yaml \
 		--namespace $(NAMESPACE) \
 		--wait --timeout 5m \
 		--set image.tag=$(VERSION)
