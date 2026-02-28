@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" />
     <ProjectReference Include="..\..\src\Api\ServiceTemplate.Api.csproj" />
   </ItemGroup>
 
