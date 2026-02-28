@@ -8,6 +8,7 @@ public sealed class GetTodosQueryHandler(ITodoRepository repository) : IRequestH
 {
     public async Task<PagedResult<TodoResponse>> HandleAsync(GetTodosQuery request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
         var (items, total) = await repository.GetPagedAsync(request.Page, request.PageSize, cancellationToken);
 
         var responses = items.Select(TodoResponse.FromTodo).ToList();

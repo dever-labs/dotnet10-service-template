@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -7,7 +8,8 @@ using ModelContextProtocol.Server;
 namespace ServiceTemplate.McpServer.Tools;
 
 [McpServerToolType]
-public sealed class TodoTools(HttpClient http)
+#pragma warning disable CA1812 // Instantiated by the MCP framework via dependency injection
+internal sealed class TodoTools(HttpClient http)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -20,7 +22,7 @@ public sealed class TodoTools(HttpClient http)
             ? "/api/todos"
             : $"/api/todos?status={Uri.EscapeDataString(status)}";
 
-        var response = await http.GetAsync(url, ct);
+        var response = await http.GetAsync(new Uri(url, UriKind.Relative), ct);
         var body = await response.Content.ReadAsStringAsync(ct);
         return response.IsSuccessStatusCode ? body : $"Error {(int)response.StatusCode}: {body}";
     }
@@ -30,7 +32,7 @@ public sealed class TodoTools(HttpClient http)
         [Description("The todo GUID")] string id,
         CancellationToken ct = default)
     {
-        var response = await http.GetAsync($"/api/todos/{id}", ct);
+        var response = await http.GetAsync(new Uri($"/api/todos/{id}", UriKind.Relative), ct);
         var body = await response.Content.ReadAsStringAsync(ct);
         return response.IsSuccessStatusCode ? body : $"Error {(int)response.StatusCode}: {body}";
     }
@@ -46,12 +48,12 @@ public sealed class TodoTools(HttpClient http)
         {
             title,
             description,
-            dueDate = dueDate is null ? (DateTimeOffset?)null : DateTimeOffset.Parse(dueDate)
+            dueDate = dueDate is null ? (DateTimeOffset?)null : DateTimeOffset.Parse(dueDate, CultureInfo.InvariantCulture)
         };
 
         var json = JsonSerializer.Serialize(payload, JsonOptions);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await http.PostAsync("/api/todos", content, ct);
+        var response = await http.PostAsync(new Uri("/api/todos", UriKind.Relative), content, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
         return response.StatusCode == HttpStatusCode.Created ? body : $"Error {(int)response.StatusCode}: {body}";
     }
@@ -61,8 +63,7 @@ public sealed class TodoTools(HttpClient http)
         [Description("The todo GUID to mark complete")] string id,
         CancellationToken ct = default)
     {
-        var url = $"/api/todos/{id}/complete";
-        var response = await http.PutAsync(url, null, ct);
+        var response = await http.PutAsync(new Uri($"/api/todos/{id}/complete", UriKind.Relative), null, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
         return response.IsSuccessStatusCode ? $"Todo {id} marked as complete." : $"Error {(int)response.StatusCode}: {body}";
     }
@@ -72,7 +73,7 @@ public sealed class TodoTools(HttpClient http)
         [Description("The todo GUID to delete")] string id,
         CancellationToken ct = default)
     {
-        var response = await http.DeleteAsync($"/api/todos/{id}", ct);
+        var response = await http.DeleteAsync(new Uri($"/api/todos/{id}", UriKind.Relative), ct);
         return response.IsSuccessStatusCode
             ? $"Todo {id} deleted."
             : $"Error {(int)response.StatusCode}: {await response.Content.ReadAsStringAsync(ct)}";
@@ -83,7 +84,7 @@ public sealed class TodoTools(HttpClient http)
     {
         try
         {
-            var response = await http.GetAsync("/health", ct);
+            var response = await http.GetAsync(new Uri("/health", UriKind.Relative), ct);
             var body = await response.Content.ReadAsStringAsync(ct);
             return response.IsSuccessStatusCode ? body : $"Unhealthy ({(int)response.StatusCode}): {body}";
         }

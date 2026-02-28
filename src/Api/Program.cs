@@ -85,9 +85,11 @@ try
 }
 catch (Exception ex) when (ex is not OperationCanceledException)
 {
-    Console.Error.WriteLine($"Application startup failed: {ex}");
+    await Console.Error.WriteLineAsync($"Application startup failed: {ex}");
     throw;
 }
 
 // Required for WebApplicationFactory in integration/acceptance tests
+#pragma warning disable CA1515 // Must be public — WebApplicationFactory<Program> in test assemblies requires it
 public partial class Program;
+#pragma warning restore CA1515

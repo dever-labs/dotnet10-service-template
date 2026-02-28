@@ -6,7 +6,7 @@ using ServiceTemplate.Application.Common.Telemetry;
 
 namespace ServiceTemplate.Application;
 
-public static class DependencyInjection
+public static class ApplicationServiceExtensions
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
@@ -14,7 +14,7 @@ public static class DependencyInjection
         services.AddScoped<ISender, Sender>();
 
         // Register all request handlers from this assembly
-        var assembly = typeof(DependencyInjection).Assembly;
+        var assembly = typeof(ApplicationServiceExtensions).Assembly;
         foreach (var type in assembly.GetTypes().Where(t => t is { IsAbstract: false, IsInterface: false }))
         {
             foreach (var iface in type.GetInterfaces().Where(i =>

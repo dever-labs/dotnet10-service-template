@@ -14,6 +14,7 @@ public sealed class UpdateTodoCommandHandler(
 {
     public async Task<Result<TodoResponse>> HandleAsync(UpdateTodoCommand request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
         var todo = await repository.GetByIdAsync(request.Id, cancellationToken);
 
         if (todo is null)

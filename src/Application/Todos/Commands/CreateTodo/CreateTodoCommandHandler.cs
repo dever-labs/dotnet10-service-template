@@ -14,6 +14,7 @@ public sealed class CreateTodoCommandHandler(
 {
     public async Task<Result<TodoResponse>> HandleAsync(CreateTodoCommand request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
         var result = Todo.Create(request.Title, request.Description, request.DueDate, timeProvider);
 
         if (!result.IsSuccess)

@@ -9,6 +9,8 @@ public sealed class Sender(IServiceProvider serviceProvider) : ISender
 {
     public Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         var requestType = request.GetType();
         var handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
 
@@ -19,7 +21,7 @@ public sealed class Sender(IServiceProvider serviceProvider) : ISender
         var behaviors = serviceProvider.GetServices(behaviorType).ToList();
 
         // Build the pipeline by wrapping from the innermost handler outward
-        RequestHandlerDelegate<TResponse> pipeline = ct =>
+        RequestHandlerFunc<TResponse> pipeline = ct =>
         {
             var handleMethod = handlerType.GetMethod(nameof(IRequestHandler<IRequest<TResponse>, TResponse>.HandleAsync))!;
             return (Task<TResponse>)handleMethod.Invoke(handler, [request, ct])!;

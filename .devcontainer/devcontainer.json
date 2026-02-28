@@ -1,27 +1,10 @@
 {
   "name": "ServiceTemplate Dev",
-  // Image-based container — no docker-compose dependency.
-  // Backing services (PostgreSQL, OTel Collector) run in the local kind cluster.
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
-
-  "features": {
-    // .NET SDK
-    "ghcr.io/devcontainers/features/dotnet:2": {
-      "version": "10"
-    },
-    // Docker-in-Docker — required to run kind cluster nodes inside the container
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "version": "latest"
-    },
-    // kubectl + Helm (minikube skipped — we use kind)
-    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
-      "version": "latest",
-      "helm": "latest",
-      "minikube": "none"
-    },
-    "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
-  },
+  // Central devcontainer image maintained by the platform team in:
+  //   github.com/dever-labs/devcontainers
+  // Includes: .NET 10 SDK, Docker-in-Docker, kubectl, Helm, git, GitHub CLI.
+  // Update the image there — all service repos pick it up on next container start.
+  "image": "ghcr.io/dever-labs/devcontainers/dotnet-service:latest",
 
   "customizations": {
     "vscode": {
@@ -54,8 +37,8 @@
     }
   },
 
-  // Installs kind, skaffold, restores .NET packages, adds Helm repos
-  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  // Restores .NET packages, adds Helm repos, updates chart dependencies
+  "postCreateCommand": "sh .devcontainer/post-create.sh",
   "postStartCommand": "echo '\\n✅ Dev container ready! Run: make cluster-create && make dev\\n'",
 
   "remoteUser": "vscode",

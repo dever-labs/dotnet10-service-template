@@ -8,14 +8,22 @@ public sealed class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
-    public async Task<TResponse> HandleAsync(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken = default)
+    private static readonly Action<ILogger, string, Exception?> LogHandling =
+        LoggerMessage.Define<string>(LogLevel.Information, new EventId(1, "Handling"), "Handling {RequestName}");
+
+    private static readonly Action<ILogger, string, Exception?> LogHandled =
+        LoggerMessage.Define<string>(LogLevel.Information, new EventId(2, "Handled"), "Handled {RequestName}");
+
+    public async Task<TResponse> HandleAsync(TRequest request, RequestHandlerFunc<TResponse> nextHandler, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(nextHandler);
+
         var name = typeof(TRequest).Name;
-        logger.LogInformation("Handling {RequestName}", name);
+        LogHandling(logger, name, null);
 
-        var response = await next(cancellationToken);
+        var response = await nextHandler(cancellationToken);
 
-        logger.LogInformation("Handled {RequestName}", name);
+        LogHandled(logger, name, null);
 
         return response;
     }

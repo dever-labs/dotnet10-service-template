@@ -14,10 +14,15 @@
     <Deterministic>true</Deterministic>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <DebugType>embedded</DebugType>
+
+    <!-- NU1900: NuGet audit warning when a source (e.g. org proxy) is unreachable.
+         Kept as a visible warning but not an error — the audit source being offline
+         is expected in environments without the internal proxy. -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1900</WarningsNotAsErrors>
+
+    <!-- CA2007: ConfigureAwait(false) is a library concern, not applicable to application
+         code where there is no synchronization context (ASP.NET Core, console apps). -->
+    <NoWarn>$(NoWarn);CA2007</NoWarn>
   </PropertyGroup>
 
-  <!-- Shared analyzers for all projects -->
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" PrivateAssets="All" />
-  </ItemGroup>
 </Project>

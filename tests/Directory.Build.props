@@ -10,5 +10,12 @@
 
     <!-- Reduce noise from XML doc generation in test projects -->
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <!-- CA1707: test method names follow the Arrange_Act_Assert_Pattern convention which uses underscores -->
+    <!-- CA1711: xUnit collection class names end in 'Collection' by convention -->
+    <!-- CA1515: test classes are internal to the test assembly and not externally referenced -->
+    <!-- CA2000: WebApplicationFactory lifetime is managed by xUnit IClassFixture -->
+    <!-- CA2234: string URIs are acceptable in test helpers for readability -->
+    <NoWarn>$(NoWarn);CA1707;CA1711;CA1515;CA2000;CA2234</NoWarn>
   </PropertyGroup>
 </Project>

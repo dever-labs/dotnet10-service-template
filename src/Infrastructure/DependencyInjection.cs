@@ -9,10 +9,12 @@ using ServiceTemplate.Infrastructure.Persistence.Repositories;
 
 namespace ServiceTemplate.Infrastructure;
 
-public static class DependencyInjection
+public static class InfrastructureServiceExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        ArgumentNullException.ThrowIfNull(configuration);
+
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 

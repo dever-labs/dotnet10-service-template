@@ -1,8 +1,8 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # Runs once after the dev container is created.
 # Installs tools not available as devcontainer features (kind, skaffold)
 # and restores .NET packages.
-set -euo pipefail
+set -eu
 
 echo ""
 echo "──────────────────────────────────────────"
@@ -30,12 +30,21 @@ else
   echo "→ skaffold already installed: $(skaffold version)"
 fi
 
-# ── .NET ─────────────────────────────────────────────────────────────────────
+# ── .NET restore ──────────────────────────────────────────────────────────────
+# Try the org NuGet proxy first (nuget.config). Fall back to nuget.org when
+# the proxy is not yet configured — this lets the template work out of the box
+# before nuget.config is updated with the real org feed URL.
 echo "→ Restoring .NET packages..."
-dotnet restore
+if ! dotnet restore --ignore-failed-sources 2>/dev/null; then
+  echo "⚠  nuget.internal unreachable — falling back to nuget.org"
+  echo "   Update nuget.config with your org's NuGet proxy to remove this warning."
+  dotnet restore --source "https://api.nuget.org/v3/index.json"
+fi
 
 echo "→ Restoring .NET tools (dotnet-ef, reportgenerator)..."
-dotnet tool restore
+if ! dotnet tool restore 2>/dev/null; then
+  dotnet tool restore --add-source "https://api.nuget.org/v3/index.json"
+fi
 
 # ── Helm repos ────────────────────────────────────────────────────────────────
 echo "→ Adding Helm repositories..."

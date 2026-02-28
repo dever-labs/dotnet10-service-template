@@ -15,6 +15,8 @@ public sealed class Todo : Entity
 
     public static Result<Todo> Create(string title, string? description, DateTimeOffset? dueDate, TimeProvider timeProvider)
     {
+        ArgumentNullException.ThrowIfNull(timeProvider);
+
         if (string.IsNullOrWhiteSpace(title))
         {
             return TodoErrors.TitleRequired;
@@ -44,6 +46,8 @@ public sealed class Todo : Entity
 
     public Result<Todo> Update(string title, string? description, DateTimeOffset? dueDate, TimeProvider timeProvider)
     {
+        ArgumentNullException.ThrowIfNull(timeProvider);
+
         if (string.IsNullOrWhiteSpace(title))
         {
             return TodoErrors.TitleRequired;
@@ -64,6 +68,8 @@ public sealed class Todo : Entity
 
     public Result<Todo> Complete(TimeProvider timeProvider)
     {
+        ArgumentNullException.ThrowIfNull(timeProvider);
+
         if (Status == TodoStatus.Done)
         {
             return TodoErrors.AlreadyCompleted;

@@ -9,7 +9,7 @@ using ServiceTemplate.Application.Todos.Queries.GetTodos;
 
 namespace ServiceTemplate.Api.Endpoints;
 
-public static class TodoEndpoints
+internal static class TodoEndpoints
 {
     public static IEndpointRouteBuilder MapTodoEndpoints(this IEndpointRouteBuilder app)
     {
@@ -91,7 +91,7 @@ public static class TodoEndpoints
 
         return result.Match(
             todo => Results.Ok(todo),
-            error => error.Code.Contains("NotFound")
+            error => error.Code.Contains("NotFound", StringComparison.Ordinal)
                 ? Results.Problem(detail: error.Description, statusCode: StatusCodes.Status404NotFound)
                 : Results.Problem(detail: error.Description, statusCode: StatusCodes.Status400BadRequest));
     }
@@ -106,4 +106,6 @@ public static class TodoEndpoints
     }
 }
 
-public sealed record UpdateTodoRequest(string Title, string? Description, DateTimeOffset? DueDate);
+#pragma warning disable CA1812 // Instantiated by ASP.NET Core model binding at runtime
+internal sealed record UpdateTodoRequest(string Title, string? Description, DateTimeOffset? DueDate);
+#pragma warning restore CA1812
