@@ -8,7 +8,7 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="9.0.0" />
 
     <!-- API / Web -->
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.1.4" />
 
     <!-- MCP Server (Model Context Protocol — Copilot agent mode tools) -->
