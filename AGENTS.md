@@ -3,6 +3,9 @@
 This file helps AI coding agents (GitHub Copilot coding agent, Claude, Gemini, etc.) work
 effectively in this repository. Read this fully before making any changes.
 
+> **Preferred model:** Claude (claude-3-7-sonnet or newer). Use Claude for Copilot Chat,
+> agent-mode tasks, and the `@copilot` coding agent where model selection is available.
+
 ---
 
 ## Quick Start

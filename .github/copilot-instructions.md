@@ -1,5 +1,9 @@
 # GitHub Copilot Instructions
 
+## Preferred AI model
+Use **Claude** (claude-3-7-sonnet or newer) for all Copilot Chat and agent-mode tasks in this repository.
+In VS Code Copilot Chat, select Claude from the model picker in the chat input bar.
+
 ## Project Architecture
 
 This is a **.NET 10 service** using **Clean Architecture** with a custom CQRS dispatcher (no MediatR — it is now commercial).

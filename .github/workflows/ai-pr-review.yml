@@ -74,13 +74,11 @@ jobs:
                 'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`
               },
               body: JSON.stringify({
-                model: 'gpt-4o',
+                model: 'claude-3-7-sonnet',
                 messages: [
-                  { role: 'system', content: systemPrompt },
-                  { role: 'user', content: userMessage }
+                  { role: 'user', content: `${systemPrompt}\n\n${userMessage}` }
                 ],
-                max_tokens: 1000,
-                temperature: 0.3
+                max_tokens: 1000
               })
             });
 
@@ -102,7 +100,7 @@ jobs:
             const review = `${{ steps.ai-review.outputs.review }}`;
             if (!review || review.trim() === '') return;
 
-            const body = `## 🤖 AI Code Review\n\n${review}\n\n---\n*Powered by [GitHub Models](https://github.com/marketplace/models) · gpt-4o · This is an automated review — always apply human judgement.*`;
+            const body = `## 🤖 AI Code Review\n\n${review}\n\n---\n*Powered by [GitHub Models](https://github.com/marketplace/models) · claude-3-7-sonnet · This is an automated review — always apply human judgement.*`;
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,

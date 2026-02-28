@@ -15,6 +15,7 @@
   "github.copilot.enable": {
     "*": true
   },
+  "github.copilot.chat.defaultModel": "claude-3.7-sonnet",
   "github.copilot.chat.codeGeneration.useInstructionFiles": true,
   "github.copilot.chat.reviewSelection.enabled": true,
   "github.copilot.chat.generateTests.codeLens": true,
