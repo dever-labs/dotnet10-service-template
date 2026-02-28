@@ -1,5 +1,6 @@
 using ServiceTemplate.Application.Common.Cqrs;
 using ServiceTemplate.Application.Common.Interfaces;
+using ServiceTemplate.Application.Common.Telemetry;
 using ServiceTemplate.Domain.Common;
 using ServiceTemplate.Domain.Todos;
 
@@ -8,7 +9,8 @@ namespace ServiceTemplate.Application.Todos.Commands.UpdateTodo;
 public sealed class UpdateTodoCommandHandler(
     ITodoRepository repository,
     IUnitOfWork unitOfWork,
-    TimeProvider timeProvider) : IRequestHandler<UpdateTodoCommand, Result<TodoResponse>>
+    TimeProvider timeProvider,
+    ITodoMetrics metrics) : IRequestHandler<UpdateTodoCommand, Result<TodoResponse>>
 {
     public async Task<Result<TodoResponse>> HandleAsync(UpdateTodoCommand request, CancellationToken cancellationToken = default)
     {
@@ -28,6 +30,8 @@ public sealed class UpdateTodoCommandHandler(
 
         await repository.UpdateAsync(todo, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        metrics.RecordUpdated();
 
         return TodoResponse.FromTodo(todo);
     }

@@ -1,6 +1,7 @@
 using Bogus;
 using NSubstitute;
 using ServiceTemplate.Application.Common.Interfaces;
+using ServiceTemplate.Application.Common.Telemetry;
 using ServiceTemplate.Application.Todos;
 using ServiceTemplate.Application.Todos.Commands.CreateTodo;
 using ServiceTemplate.Domain.Todos;
@@ -12,6 +13,7 @@ public sealed class CreateTodoCommandHandlerTests
     private readonly ITodoRepository _repository = Substitute.For<ITodoRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly TimeProvider _timeProvider = Substitute.For<TimeProvider>();
+    private readonly ITodoMetrics _metrics = Substitute.For<ITodoMetrics>();
     private readonly CreateTodoCommandHandler _sut;
 
     private static readonly Faker Faker = new();
@@ -19,7 +21,7 @@ public sealed class CreateTodoCommandHandlerTests
     public CreateTodoCommandHandlerTests()
     {
         _timeProvider.GetUtcNow().Returns(DateTimeOffset.UtcNow);
-        _sut = new CreateTodoCommandHandler(_repository, _unitOfWork, _timeProvider);
+        _sut = new CreateTodoCommandHandler(_repository, _unitOfWork, _timeProvider, _metrics);
     }
 
     [Fact]

@@ -7,6 +7,7 @@ using Scalar.AspNetCore;
 using ServiceTemplate.Api.Endpoints;
 using ServiceTemplate.Api.Middleware;
 using ServiceTemplate.Application;
+using ServiceTemplate.Application.Common.Telemetry;
 using ServiceTemplate.Infrastructure;
 using ServiceTemplate.Infrastructure.Persistence;
 
@@ -31,6 +32,8 @@ try
         .WithMetrics(metrics => metrics
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
+            .AddRuntimeInstrumentation()           // GC, thread pool, allocations, JIT
+            .AddMeter(TodoMetrics.MeterName)       // custom domain metrics
             .AddOtlpExporter(o => o.Endpoint = otlpEndpoint))
         .WithLogging(logging => logging
             .AddOtlpExporter(o => o.Endpoint = otlpEndpoint));

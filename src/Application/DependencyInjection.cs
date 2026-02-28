@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using ServiceTemplate.Application.Common.Behaviors;
 using ServiceTemplate.Application.Common.Cqrs;
+using ServiceTemplate.Application.Common.Telemetry;
 
 namespace ServiceTemplate.Application;
 
@@ -31,6 +32,9 @@ public static class DependencyInjection
 
         // FluentValidation validators
         services.AddValidatorsFromAssembly(assembly);
+
+        // Custom metrics — exported via OTel; meter registered in Program.cs
+        services.AddSingleton<ITodoMetrics, TodoMetrics>();
 
         return services;
     }
