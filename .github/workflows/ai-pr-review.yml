@@ -1,0 +1,112 @@
+name: AI PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  pull-requests: write
+  models: read  # Required for GitHub Models API access
+
+jobs:
+  ai-review:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR diff
+        id: diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Get the diff, cap at 6000 chars to stay within model context limits
+          DIFF=$(gh pr diff ${{ github.event.pull_request.number }} | head -c 6000)
+          echo "diff<<DIFF_EOF" >> "$GITHUB_OUTPUT"
+          echo "$DIFF" >> "$GITHUB_OUTPUT"
+          echo "DIFF_EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Run AI review via GitHub Models
+        id: ai-review
+        uses: actions/github-script@v7
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          script: |
+            const diff = `${{ steps.diff.outputs.diff }}`;
+            const pr_title = `${{ github.event.pull_request.title }}`;
+            const pr_body = `${{ github.event.pull_request.body }}`;
+
+            const systemPrompt = `You are an expert .NET 10 code reviewer for a Clean Architecture service.
+
+            Repository conventions:
+            - Uses Result<T> for error handling — no throwing for expected failures
+            - Custom CQRS: ISender.SendAsync(), IRequestHandler with HandleAsync() (NOT MediatR)
+            - Minimal APIs only (no ControllerBase or [ApiController])
+            - Central package management (Directory.Packages.props)
+            - TreatWarningsAsErrors=true — all warnings are errors
+            - Tests: unit tests call HandleAsync directly; integration tests use Testcontainers
+
+            Review for:
+            1. Correctness and logic bugs
+            2. Violations of the repository conventions above
+            3. Security issues (injection, secrets, auth bypass)
+            4. Missing error handling (throwing instead of Result<T>)
+            5. Missing tests for new functionality
+
+            Be concise. Only flag real issues. Do not comment on style or formatting.
+            Format your response as markdown.`;
+
+            const userMessage = `PR: ${pr_title}\n\n${pr_body ? 'Description: ' + pr_body + '\n\n' : ''}Diff:\n\`\`\`diff\n${diff}\n\`\`\``;
+
+            // Call GitHub Models API (OpenAI-compatible)
+            const response = await fetch('https://models.inference.ai.azure.com/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`
+              },
+              body: JSON.stringify({
+                model: 'gpt-4o',
+                messages: [
+                  { role: 'system', content: systemPrompt },
+                  { role: 'user', content: userMessage }
+                ],
+                max_tokens: 1000,
+                temperature: 0.3
+              })
+            });
+
+            if (!response.ok) {
+              console.log(`GitHub Models API returned ${response.status} — skipping AI review`);
+              core.setOutput('review', '');
+              return;
+            }
+
+            const data = await response.json();
+            const review = data.choices?.[0]?.message?.content ?? '';
+            core.setOutput('review', review);
+
+      - name: Post review comment
+        if: steps.ai-review.outputs.review != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const review = `${{ steps.ai-review.outputs.review }}`;
+            if (!review || review.trim() === '') return;
+
+            const body = `## 🤖 AI Code Review\n\n${review}\n\n---\n*Powered by [GitHub Models](https://github.com/marketplace/models) · gpt-4o · This is an automated review — always apply human judgement.*`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });

@@ -12,6 +12,9 @@
   <Folder Name="/src/Infrastructure/">
     <Project Path="src/Infrastructure/ServiceTemplate.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/McpServer/">
+    <Project Path="src/McpServer/ServiceTemplate.McpServer.csproj" />
+  </Folder>
   <Folder Name="/tests/" />
   <Folder Name="/tests/AcceptanceTests/">
     <Project Path="tests/AcceptanceTests/ServiceTemplate.AcceptanceTests.csproj" />

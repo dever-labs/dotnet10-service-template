@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "GitHub.copilot",
+    "GitHub.copilot-chat",
+    "ms-dotnettools.csharp",
+    "ms-dotnettools.csdevkit",
+    "ms-dotnettools.vscode-dotnet-runtime",
+    "editorconfig.editorconfig",
+    "ms-azuretools.vscode-docker",
+    "streetsidesoftware.code-spell-checker",
+    "eamodio.gitlens",
+    "humao.rest-client"
+  ]
+}
