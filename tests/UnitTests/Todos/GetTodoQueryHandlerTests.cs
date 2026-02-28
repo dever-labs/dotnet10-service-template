@@ -21,7 +21,7 @@ public sealed class GetTodoQueryHandlerTests
         _repository.GetByIdAsync(todo.Id, Arg.Any<CancellationToken>()).Returns(todo);
 
         // Act
-        var result = await _sut.Handle(new GetTodoQuery(todo.Id), CancellationToken.None);
+        var result = await _sut.HandleAsync(new GetTodoQuery(todo.Id), CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -35,7 +35,7 @@ public sealed class GetTodoQueryHandlerTests
         _repository.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((Todo?)null);
 
         // Act
-        var result = await _sut.Handle(new GetTodoQuery(Guid.NewGuid()), CancellationToken.None);
+        var result = await _sut.HandleAsync(new GetTodoQuery(Guid.NewGuid()), CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

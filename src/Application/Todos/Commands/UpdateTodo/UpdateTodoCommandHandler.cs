@@ -1,4 +1,4 @@
-using MediatR;
+using ServiceTemplate.Application.Common.Cqrs;
 using ServiceTemplate.Application.Common.Interfaces;
 using ServiceTemplate.Domain.Common;
 using ServiceTemplate.Domain.Todos;
@@ -10,7 +10,7 @@ public sealed class UpdateTodoCommandHandler(
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider) : IRequestHandler<UpdateTodoCommand, Result<TodoResponse>>
 {
-    public async Task<Result<TodoResponse>> Handle(UpdateTodoCommand request, CancellationToken cancellationToken)
+    public async Task<Result<TodoResponse>> HandleAsync(UpdateTodoCommand request, CancellationToken cancellationToken = default)
     {
         var todo = await repository.GetByIdAsync(request.Id, cancellationToken);
 

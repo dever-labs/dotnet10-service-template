@@ -1,4 +1,4 @@
-using MediatR;
+using ServiceTemplate.Application.Common.Cqrs;
 using ServiceTemplate.Application.Common.Interfaces;
 using ServiceTemplate.Domain.Common;
 using ServiceTemplate.Domain.Todos;
@@ -9,7 +9,7 @@ public sealed class DeleteTodoCommandHandler(
     ITodoRepository repository,
     IUnitOfWork unitOfWork) : IRequestHandler<DeleteTodoCommand, Result<bool>>
 {
-    public async Task<Result<bool>> Handle(DeleteTodoCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> HandleAsync(DeleteTodoCommand request, CancellationToken cancellationToken = default)
     {
         var todo = await repository.GetByIdAsync(request.Id, cancellationToken);
 

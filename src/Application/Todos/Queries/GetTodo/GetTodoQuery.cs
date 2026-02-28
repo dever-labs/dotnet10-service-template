@@ -1,4 +1,4 @@
-using MediatR;
+using ServiceTemplate.Application.Common.Cqrs;
 using ServiceTemplate.Domain.Common;
 
 namespace ServiceTemplate.Application.Todos.Queries.GetTodo;

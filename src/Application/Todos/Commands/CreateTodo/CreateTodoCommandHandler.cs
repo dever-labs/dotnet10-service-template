@@ -1,4 +1,4 @@
-using MediatR;
+using ServiceTemplate.Application.Common.Cqrs;
 using ServiceTemplate.Application.Common.Interfaces;
 using ServiceTemplate.Domain.Common;
 using ServiceTemplate.Domain.Todos;
@@ -10,7 +10,7 @@ public sealed class CreateTodoCommandHandler(
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider) : IRequestHandler<CreateTodoCommand, Result<TodoResponse>>
 {
-    public async Task<Result<TodoResponse>> Handle(CreateTodoCommand request, CancellationToken cancellationToken)
+    public async Task<Result<TodoResponse>> HandleAsync(CreateTodoCommand request, CancellationToken cancellationToken = default)
     {
         var result = Todo.Create(request.Title, request.Description, request.DueDate, timeProvider);
 

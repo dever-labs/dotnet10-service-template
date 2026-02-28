@@ -1,4 +1,4 @@
-using MediatR;
+using ServiceTemplate.Application.Common.Cqrs;
 using Microsoft.AspNetCore.Mvc;
 using ServiceTemplate.Application.Todos;
 using ServiceTemplate.Application.Todos.Commands.CreateTodo;
@@ -54,13 +54,13 @@ public static class TodoEndpoints
         ISender sender,
         CancellationToken cancellationToken)
     {
-        var result = await sender.Send(new GetTodosQuery(page, pageSize), cancellationToken);
+        var result = await sender.SendAsync(new GetTodosQuery(page, pageSize), cancellationToken);
         return Results.Ok(result);
     }
 
     private static async Task<IResult> GetTodoAsync(Guid id, ISender sender, CancellationToken cancellationToken)
     {
-        var result = await sender.Send(new GetTodoQuery(id), cancellationToken);
+        var result = await sender.SendAsync(new GetTodoQuery(id), cancellationToken);
 
         return result.Match(
             todo => Results.Ok(todo),
@@ -72,7 +72,7 @@ public static class TodoEndpoints
         ISender sender,
         CancellationToken cancellationToken)
     {
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.SendAsync(command, cancellationToken);
 
         return result.Match(
             todo => Results.CreatedAtRoute("GetTodo", new { id = todo.Id }, todo),
@@ -85,7 +85,7 @@ public static class TodoEndpoints
         ISender sender,
         CancellationToken cancellationToken)
     {
-        var result = await sender.Send(
+        var result = await sender.SendAsync(
             new UpdateTodoCommand(id, request.Title, request.Description, request.DueDate),
             cancellationToken);
 
@@ -98,7 +98,7 @@ public static class TodoEndpoints
 
     private static async Task<IResult> DeleteTodoAsync(Guid id, ISender sender, CancellationToken cancellationToken)
     {
-        var result = await sender.Send(new DeleteTodoCommand(id), cancellationToken);
+        var result = await sender.SendAsync(new DeleteTodoCommand(id), cancellationToken);
 
         return result.Match(
             _ => Results.NoContent(),

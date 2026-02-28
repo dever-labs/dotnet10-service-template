@@ -12,7 +12,6 @@
     <PackageVersion Include="Scalar.AspNetCore" Version="2.1.4" />
 
     <!-- Application -->
-    <PackageVersion Include="MediatR" Version="12.4.1" />
     <PackageVersion Include="FluentValidation" Version="11.11.0" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
 

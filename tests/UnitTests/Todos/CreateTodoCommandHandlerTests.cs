@@ -32,7 +32,7 @@ public sealed class CreateTodoCommandHandlerTests
             DueDate: DateTimeOffset.UtcNow.AddDays(7));
 
         // Act
-        var result = await _sut.Handle(command, CancellationToken.None);
+        var result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -47,7 +47,7 @@ public sealed class CreateTodoCommandHandlerTests
         var command = new CreateTodoCommand(Faker.Lorem.Sentence(3), null, null);
 
         // Act
-        await _sut.Handle(command, CancellationToken.None);
+        await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         await _repository.Received(1).AddAsync(Arg.Any<Todo>(), Arg.Any<CancellationToken>());
@@ -63,7 +63,7 @@ public sealed class CreateTodoCommandHandlerTests
         var command = new CreateTodoCommand(title, null, null);
 
         // Act
-        var result = await _sut.Handle(command, CancellationToken.None);
+        var result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -77,7 +77,7 @@ public sealed class CreateTodoCommandHandlerTests
         var command = new CreateTodoCommand(new string('x', 201), null, null);
 
         // Act
-        var result = await _sut.Handle(command, CancellationToken.None);
+        var result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

@@ -1,18 +1,18 @@
 using FluentValidation;
-using MediatR;
+using ServiceTemplate.Application.Common.Cqrs;
 
 namespace ServiceTemplate.Application.Common.Behaviors;
 
 /// <summary>Runs FluentValidation validators for each request before the handler executes.</summary>
 public sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators)
     : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : notnull
+    where TRequest : IRequest<TResponse>
 {
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    public async Task<TResponse> HandleAsync(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken = default)
     {
         if (!validators.Any())
         {
-            return await next();
+            return await next(cancellationToken);
         }
 
         var context = new ValidationContext<TRequest>(request);
@@ -30,6 +30,6 @@ public sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidat
             throw new ValidationException(failures);
         }
 
-        return await next();
+        return await next(cancellationToken);
     }
 }
