@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -55,7 +56,7 @@ try
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddSingleton(TimeProvider.System);
     builder.Services.AddHealthChecks()
-        .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!);
+        .AddNpgSql(sp => sp.GetRequiredService<IConfiguration>().GetConnectionString("DefaultConnection")!);
 
     // ── Build ─────────────────────────────────────────────────────────────────
     var app = builder.Build();

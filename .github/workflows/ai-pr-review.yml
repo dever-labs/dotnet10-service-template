@@ -38,11 +38,14 @@ jobs:
         uses: actions/github-script@v7
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          PR_DIFF: ${{ steps.diff.outputs.diff }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
         with:
           script: |
-            const diff = `${{ steps.diff.outputs.diff }}`;
-            const pr_title = `${{ github.event.pull_request.title }}`;
-            const pr_body = `${{ github.event.pull_request.body }}`;
+            const diff = process.env.PR_DIFF || '';
+            const pr_title = process.env.PR_TITLE || '';
+            const pr_body = process.env.PR_BODY || '';
 
             const systemPrompt = `You are an expert .NET 10 code reviewer for a Clean Architecture service.
 
@@ -89,15 +92,18 @@ jobs:
             }
 
             const data = await response.json();
-            const review = data.choices?.[0]?.message?.content ?? '';
+            const choices = data.choices;
+            const review = (choices && choices[0] && choices[0].message && choices[0].message.content) ? choices[0].message.content : '';
             core.setOutput('review', review);
 
       - name: Post review comment
         if: steps.ai-review.outputs.review != ''
         uses: actions/github-script@v7
+        env:
+          AI_REVIEW: ${{ steps.ai-review.outputs.review }}
         with:
           script: |
-            const review = `${{ steps.ai-review.outputs.review }}`;
+            const review = process.env.AI_REVIEW || '';
             if (!review || review.trim() === '') return;
 
             const body = `## 🤖 AI Code Review\n\n${review}\n\n---\n*Powered by [GitHub Models](https://github.com/marketplace/models) · claude-3-7-sonnet · This is an automated review — always apply human judgement.*`;
