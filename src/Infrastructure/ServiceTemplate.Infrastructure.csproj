@@ -4,6 +4,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="All" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <!-- Serilog is used ONLY for the RFC 5424 audit syslog logger, not for application logs -->
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Sinks.SyslogMessages" />
   </ItemGroup>
 
   <ItemGroup>

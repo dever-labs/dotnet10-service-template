@@ -1,4 +1,5 @@
 using ServiceTemplate.Application.Common.Cqrs;
+using ServiceTemplate.Application.Common.Logging;
 using ServiceTemplate.Domain.Common;
 using ServiceTemplate.Domain.Todos;
 
@@ -8,4 +9,7 @@ public sealed record UpdateTodoCommand(
     Guid Id,
     string Title,
     string? Description,
-    DateTimeOffset? DueDate) : IRequest<Result<TodoResponse>>;
+    DateTimeOffset? DueDate) : IRequest<Result<TodoResponse>>, IAuditableRequest
+{
+    public string EntityType => "Todo";
+}

@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ServiceTemplate.Application.Common.Interfaces;
+using ServiceTemplate.Application.Common.Logging;
+using ServiceTemplate.Infrastructure.Logging;
 using ServiceTemplate.Infrastructure.Persistence;
 using ServiceTemplate.Infrastructure.Persistence.Repositories;
 
@@ -23,6 +25,9 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AppDbContext>());
         services.AddScoped<ITodoRepository, TodoRepository>();
+
+        services.Configure<AuditLogOptions>(configuration.GetSection(AuditLogOptions.SectionName));
+        services.AddSingleton<IAuditLogger, SyslogAuditLogger>();
 
         return services;
     }

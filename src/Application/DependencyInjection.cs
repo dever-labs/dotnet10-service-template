@@ -27,6 +27,7 @@ public static class DependencyInjection
         // Register open generic pipeline behaviors (applied in registration order)
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(AuditBehavior<,>));
 
         // FluentValidation validators
         services.AddValidatorsFromAssembly(assembly);

@@ -1,39 +1,25 @@
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Scalar.AspNetCore;
-using Serilog;
 using ServiceTemplate.Api.Endpoints;
 using ServiceTemplate.Api.Middleware;
 using ServiceTemplate.Application;
 using ServiceTemplate.Infrastructure;
 using ServiceTemplate.Infrastructure.Persistence;
 
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .CreateBootstrapLogger();
-
 try
 {
     var builder = WebApplication.CreateBuilder(args);
 
-    // ── Logging ──────────────────────────────────────────────────────────────
-    builder.Host.UseSerilog((ctx, services, cfg) => cfg
-        .ReadFrom.Configuration(ctx.Configuration)
-        .ReadFrom.Services(services)
-        .Enrich.FromLogContext()
-        .Enrich.WithMachineName()
-        .Enrich.WithThreadId()
-        .WriteTo.Console(outputTemplate:
-            "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}"));
-
-    // ── Application layers ────────────────────────────────────────────────────
-    builder.Services.AddApplication();
-    builder.Services.AddInfrastructure(builder.Configuration);
-
-    // ── OpenTelemetry ─────────────────────────────────────────────────────────
     var serviceName = builder.Configuration["OpenTelemetry:ServiceName"] ?? "service-template";
+    var otlpEndpoint = new Uri(builder.Configuration["OpenTelemetry:OtlpEndpoint"] ?? "http://localhost:4317");
+
+    // ── OpenTelemetry — traces, metrics, AND logs all in one pipeline ─────────
+    // Logs export via OTLP alongside traces/metrics for full correlation.
+    // Console output format is controlled by appsettings Logging:Console:FormatterName.
     builder.Services
         .AddOpenTelemetry()
         .ConfigureResource(r => r.AddService(serviceName))
@@ -41,11 +27,24 @@ try
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
             .AddEntityFrameworkCoreInstrumentation()
-            .AddOtlpExporter())
+            .AddOtlpExporter(o => o.Endpoint = otlpEndpoint))
         .WithMetrics(metrics => metrics
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
-            .AddOtlpExporter());
+            .AddOtlpExporter(o => o.Endpoint = otlpEndpoint))
+        .WithLogging(logging => logging
+            .AddOtlpExporter(o => o.Endpoint = otlpEndpoint));
+
+    // Include scopes and formatted messages in OTel log records
+    builder.Logging.AddOpenTelemetry(o =>
+    {
+        o.IncludeScopes = true;
+        o.IncludeFormattedMessage = true;
+    });
+
+    // ── Application layers ────────────────────────────────────────────────────
+    builder.Services.AddApplication();
+    builder.Services.AddInfrastructure(builder.Configuration);
 
     // ── API ───────────────────────────────────────────────────────────────────
     builder.Services.AddOpenApi();
@@ -58,22 +57,12 @@ try
     // ── Build ─────────────────────────────────────────────────────────────────
     var app = builder.Build();
 
-    // Run migrations in non-test environments
     if (!app.Environment.IsEnvironment("Test"))
     {
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.MigrateAsync();
     }
-
-    app.UseSerilogRequestLogging(opts =>
-    {
-        opts.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
-        {
-            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
-            diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
-        };
-    });
 
     app.UseExceptionHandler();
     app.UseStatusCodePages();
@@ -92,12 +81,8 @@ try
 }
 catch (Exception ex) when (ex is not OperationCanceledException)
 {
-    Log.Fatal(ex, "Application startup failed");
+    Console.Error.WriteLine($"Application startup failed: {ex}");
     throw;
-}
-finally
-{
-    await Log.CloseAndFlushAsync();
 }
 
 // Required for WebApplicationFactory in integration/acceptance tests

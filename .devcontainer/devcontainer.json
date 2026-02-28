@@ -36,7 +36,7 @@
         "editor.codeActionsOnSave": {
           "source.organizeImports": "explicit"
         },
-        "dotnet.defaultSolution": "ServiceTemplate.sln",
+        "dotnet.defaultSolution": "ServiceTemplate.slnx",
         "omnisharp.enableRoslynAnalyzers": true,
         "omnisharp.enableEditorConfigSupport": true,
         "files.exclude": {
