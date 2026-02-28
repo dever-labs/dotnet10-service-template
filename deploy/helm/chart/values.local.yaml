@@ -1,0 +1,55 @@
+# Local development overrides for the kind cluster.
+#
+# Applied on top of values.yaml by skaffold and make targets:
+#   skaffold dev
+#   helm upgrade --install service-template deploy/helm/chart \
+#     -f deploy/helm/chart/values.yaml \
+#     -f deploy/helm/chart/values.local.yaml
+#
+# DO NOT use in staging or production.
+
+replicaCount: 1
+
+image:
+  # Pushed to the local kind registry by skaffold — see skaffold.yaml
+  repository: localhost:5001/service-template
+  pullPolicy: Always
+
+# ── Scheduling — single-node cluster ─────────────────────────────────────────
+# Remove zone-spread and anti-affinity rules that require multiple nodes.
+topologySpreadConstraints: []
+affinity: {}
+
+# PDB requires minAvailable=1 which blocks rolling updates on a single-node cluster.
+podDisruptionBudget:
+  enabled: false
+
+autoscaling:
+  enabled: false
+
+# ── PostgreSQL (local) ────────────────────────────────────────────────────────
+# Spins up a postgres pod as part of this release.
+# fullnameOverride is set in values.yaml → service is always "postgresql".
+postgresql:
+  enabled: true
+  primary:
+    persistence:
+      # Ephemeral storage — data is lost when the pod restarts.
+      # Run 'make migrate' after a pod restart if you need a fresh schema.
+      enabled: false
+
+# ── Application config ────────────────────────────────────────────────────────
+# Connection string targets the postgresql subchart service name ("postgresql").
+# No Secret needed in local dev — plain env var is fine.
+envFromSecret:
+  enabled: false
+
+env:
+  ASPNETCORE_ENVIRONMENT: Development
+  ASPNETCORE_HTTP_PORTS: "8080"
+  ConnectionStrings__DefaultConnection: "Host=postgresql;Port=5432;Database=servicetemplate;Username=postgres;Password=postgres"
+
+configMap:
+  data:
+    OpenTelemetry__ServiceName: service-template-local
+    OpenTelemetry__OtlpEndpoint: "http://otel-collector:4317"

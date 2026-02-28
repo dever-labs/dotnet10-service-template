@@ -1,15 +1,23 @@
 {
   "name": "ServiceTemplate Dev",
-  "dockerComposeFile": ["../docker-compose.yml", "docker-compose.devcontainer.yml"],
-  "service": "devcontainer",
-  "workspaceFolder": "/workspace",
+  // Image-based container — no docker-compose dependency.
+  // Backing services (PostgreSQL, OTel Collector) run in the local kind cluster.
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
 
   "features": {
+    // .NET SDK
     "ghcr.io/devcontainers/features/dotnet:2": {
-      "version": "10.0"
+      "version": "10"
     },
+    // Docker-in-Docker — required to run kind cluster nodes inside the container
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "version": "latest"
+    },
+    // kubectl + Helm (minikube skipped — we use kind)
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "version": "latest",
+      "helm": "latest",
+      "minikube": "none"
     },
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
@@ -25,9 +33,8 @@
         "editorconfig.editorconfig",
         "eamodio.gitlens",
         "mhutchie.git-graph",
-        "ms-azuretools.vscode-docker",
-        "redhat.vscode-yaml",
         "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "redhat.vscode-yaml",
         "humao.rest-client"
       ],
       "settings": {
@@ -47,9 +54,12 @@
     }
   },
 
-  "postCreateCommand": "dotnet restore && dotnet tool restore",
-  "postStartCommand": "echo '\\n✅ Dev container ready! Run: make setup\\n'",
+  // Installs kind, skaffold, restores .NET packages, adds Helm repos
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "echo '\\n✅ Dev container ready! Run: make cluster-create && make dev\\n'",
 
   "remoteUser": "vscode",
-  "forwardPorts": [8080, 5432, 5341]
+  // 8080: app (via skaffold port-forward)
+  "forwardPorts": [8080]
 }
+

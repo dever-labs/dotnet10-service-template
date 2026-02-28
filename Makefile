@@ -6,9 +6,13 @@ SHELL := /bin/bash
 PROJECT        := ServiceTemplate
 SOLUTION       := ServiceTemplate.slnx
 SRC_API        := src/Api
-DOCKER_IMAGE   := service-template
 VERSION        ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "0.0.1-local")
-COMPOSE_FILE   := docker-compose.yml
+CLUSTER_NAME   := service-template
+REGISTRY       := localhost:5001
+IMAGE          := $(REGISTRY)/service-template
+HELM_CHART     := deploy/helm/chart
+HELM_RELEASE   := service-template
+NAMESPACE      := default
 
 # Colors
 CYAN  := \033[36m
@@ -21,40 +25,78 @@ help: ## Show this help
 	@echo "  $(CYAN)$(PROJECT) Development Tasks$(RESET)"
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
-		| awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-22s$(RESET) %s\n", $$1, $$2}'
+		| awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-24s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
 
 # ── Setup ──────────────────────────────────────────────────────────────────────
 .PHONY: setup
-setup: ## First-time project setup (installs tools, restores packages)
-	@echo "→ Installing .NET tools..."
+setup: ## First-time setup: install tools, restore packages, add Helm repos
+	@echo "→ Restoring .NET tools and packages..."
 	dotnet tool restore
-	@echo "→ Restoring NuGet packages..."
 	dotnet restore
-	@echo "→ Starting infrastructure (Postgres, Seq, OTEL)..."
-	$(MAKE) infra-up
-	@echo "→ Running database migrations..."
-	$(MAKE) migrate
+	@echo "→ Adding Helm repositories..."
+	helm repo add bitnami https://charts.bitnami.com/bitnami 2>/dev/null || true
+	helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts 2>/dev/null || true
+	helm repo update
+	$(MAKE) helm-deps
 	@echo ""
-	@echo "✅ Setup complete! Run 'make run' to start the API."
+	@echo "✅ Setup complete! Next: make cluster-create && make dev"
+
+# ── Cluster ────────────────────────────────────────────────────────────────────
+.PHONY: cluster-create
+cluster-create: ## Create local kind cluster with local Docker registry
+	bash scripts/kind-with-registry.sh $(CLUSTER_NAME)
+
+.PHONY: cluster-delete
+cluster-delete: ## Delete local kind cluster and registry
+	@echo "→ Deleting cluster '$(CLUSTER_NAME)'..."
+	kind delete cluster --name $(CLUSTER_NAME)
+	@echo "→ Stopping registry..."
+	docker rm -f kind-registry 2>/dev/null || true
+
+.PHONY: cluster-status
+cluster-status: ## Show cluster nodes, registry, and Helm release status
+	@echo "── Nodes ────────────────────────────────────────────"
+	@kubectl get nodes -o wide 2>/dev/null || echo "(no cluster)"
+	@echo ""
+	@echo "── Registry ($(REGISTRY)) ──────────────────────────"
+	@docker inspect -f 'Running: {{.State.Running}}' kind-registry 2>/dev/null || echo "(not running)"
+	@echo ""
+	@echo "── Helm releases ────────────────────────────────────"
+	@helm list -n $(NAMESPACE) 2>/dev/null || true
+
+# ── Dev loop ───────────────────────────────────────────────────────────────────
+.PHONY: dev
+dev: ## Build, deploy and watch for changes (skaffold dev + port-forward :8080)
+	skaffold dev --port-forward
+
+.PHONY: dev-run
+dev-run: ## One-shot build and deploy (no file watching)
+	skaffold run --port-forward
+
+.PHONY: dev-delete
+dev-delete: ## Remove the skaffold-managed release from the cluster
+	skaffold delete
 
 # ── Build ──────────────────────────────────────────────────────────────────────
 .PHONY: build
-build: ## Build the solution
+build: ## Build the solution (Release, warnings as errors)
 	dotnet build $(SOLUTION) -c Release --no-restore -p:TreatWarningsAsErrors=true
 
 .PHONY: build-dev
 build-dev: ## Build in Debug mode
 	dotnet build $(SOLUTION) -c Debug
 
-# ── Run ────────────────────────────────────────────────────────────────────────
-.PHONY: run
-run: ## Run the API locally (hot reload)
-	dotnet watch run --project $(SRC_API) --launch-profile Development
+.PHONY: docker-build
+docker-build: ## Build Docker image and push to local registry
+	docker build -t $(IMAGE):$(VERSION) -t $(IMAGE):local --build-arg VERSION=$(VERSION) .
+	docker push $(IMAGE):$(VERSION)
+	docker push $(IMAGE):local
 
-.PHONY: run-docker
-run-docker: ## Run the full stack with Docker Compose
-	docker compose -f $(COMPOSE_FILE) up --build
+# ── Run (dotnet watch — no cluster needed) ────────────────────────────────────
+.PHONY: run
+run: ## Run the API with dotnet watch (needs local postgres port-forward or override)
+	dotnet watch run --project $(SRC_API) --launch-profile Development
 
 # ── Tests ──────────────────────────────────────────────────────────────────────
 .PHONY: test
@@ -66,14 +108,14 @@ test: ## Run unit tests
 		--collect:"XPlat Code Coverage"
 
 .PHONY: test-integration
-test-integration: ## Run integration tests (requires Docker)
+test-integration: ## Run integration tests (uses Testcontainers — no cluster needed)
 	dotnet test tests/IntegrationTests \
 		-c Release \
 		--no-restore \
 		--logger "console;verbosity=normal"
 
 .PHONY: test-acceptance
-test-acceptance: ## Run acceptance tests (requires Docker)
+test-acceptance: ## Run acceptance tests (uses Testcontainers — no cluster needed)
 	dotnet test tests/AcceptanceTests \
 		-c Release \
 		--no-restore \
@@ -95,7 +137,7 @@ coverage: ## Run unit tests and open HTML coverage report
 		-reporttypes:Html
 	@echo "→ Coverage report: TestResults/CoverageReport/index.html"
 
-# ── Code Quality ───────────────────────────────────────────────────────────────
+# ── Code quality ───────────────────────────────────────────────────────────────
 .PHONY: fmt
 fmt: ## Format all code
 	dotnet format $(SOLUTION)
@@ -106,11 +148,11 @@ lint: ## Check formatting without modifying files
 
 # ── Database ───────────────────────────────────────────────────────────────────
 .PHONY: migrate
-migrate: ## Apply EF Core migrations
-	dotnet ef database update --project src/Infrastructure --startup-project src/Api
+migrate: ## Apply EF Core migrations (port-forwards local cluster postgres)
+	bash scripts/migrate-local.sh
 
 .PHONY: migration
-migration: ## Create a new migration: make migration NAME=AddNewTable
+migration: ## Create a new EF Core migration: make migration NAME=AddNewTable
 	@test -n "$(NAME)" || (echo "ERROR: NAME is required. Usage: make migration NAME=AddNewTable"; exit 1)
 	dotnet ef migrations add $(NAME) --project src/Infrastructure --startup-project src/Api
 
@@ -118,51 +160,38 @@ migration: ## Create a new migration: make migration NAME=AddNewTable
 migration-rollback: ## Roll back to previous migration
 	dotnet ef migrations remove --project src/Infrastructure --startup-project src/Api
 
-# ── Infrastructure ─────────────────────────────────────────────────────────────
-.PHONY: infra-up
-infra-up: ## Start backing services (Postgres, Seq, OTEL Collector)
-	docker compose -f $(COMPOSE_FILE) up -d postgres seq otel-collector
-
-.PHONY: infra-down
-infra-down: ## Stop backing services
-	docker compose -f $(COMPOSE_FILE) down
-
-.PHONY: infra-reset
-infra-reset: ## Destroy and recreate all infrastructure (WARNING: deletes data)
-	docker compose -f $(COMPOSE_FILE) down -v
-	$(MAKE) infra-up
-	sleep 3
-	$(MAKE) migrate
-
-# ── Docker ─────────────────────────────────────────────────────────────────────
-.PHONY: docker-build
-docker-build: ## Build the Docker image
-	docker build -t $(DOCKER_IMAGE):$(VERSION) -t $(DOCKER_IMAGE):local --build-arg VERSION=$(VERSION) .
-
-.PHONY: docker-up
-docker-up: ## Start full stack with Docker Compose
-	docker compose -f $(COMPOSE_FILE) up -d
-
-.PHONY: docker-down
-docker-down: ## Stop full stack
-	docker compose -f $(COMPOSE_FILE) down
-
-.PHONY: docker-logs
-docker-logs: ## Tail Docker Compose logs
-	docker compose -f $(COMPOSE_FILE) logs -f
-
 # ── Helm ───────────────────────────────────────────────────────────────────────
+.PHONY: helm-deps
+helm-deps: ## Download/update Helm chart dependencies (subcharts)
+	helm dependency update $(HELM_CHART)
+
 .PHONY: helm-lint
 helm-lint: ## Lint the Helm chart
-	helm lint deploy/helm/chart
+	helm lint $(HELM_CHART) -f $(HELM_CHART)/values.local.yaml
 
 .PHONY: helm-template
-helm-template: ## Render Helm templates (dry run)
-	helm template service-template deploy/helm/chart --debug
+helm-template: ## Render Helm templates with local values (dry run)
+	helm template $(HELM_RELEASE) $(HELM_CHART) \
+		-f $(HELM_CHART)/values.yaml \
+		-f $(HELM_CHART)/values.local.yaml \
+		--debug
+
+.PHONY: helm-install
+helm-install: ## Install chart to local cluster
+	helm upgrade --install $(HELM_RELEASE) $(HELM_CHART) \
+		-f $(HELM_CHART)/values.yaml \
+		-f $(HELM_CHART)/values.local.yaml \
+		--namespace $(NAMESPACE) \
+		--wait --timeout 5m \
+		--set image.tag=$(VERSION)
+
+.PHONY: helm-uninstall
+helm-uninstall: ## Uninstall chart from local cluster
+	helm uninstall $(HELM_RELEASE) --namespace $(NAMESPACE)
 
 .PHONY: helm-package
-helm-package: ## Package the Helm chart
-	helm package deploy/helm/chart --version $(VERSION) --app-version $(VERSION)
+helm-package: ## Package the Helm chart for release
+	helm package $(HELM_CHART) --version $(VERSION) --app-version $(VERSION)
 
 # ── Utilities ──────────────────────────────────────────────────────────────────
 .PHONY: clean
@@ -178,3 +207,4 @@ restore: ## Restore NuGet packages
 .PHONY: outdated
 outdated: ## List outdated NuGet packages
 	dotnet list package --outdated
+

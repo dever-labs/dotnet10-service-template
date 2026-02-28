@@ -15,9 +15,16 @@ maintainers:
 dependencies:
   # OTel Collector deployed alongside the app — receives OTLP from the service
   # and forwards to your observability backend (Jaeger, Grafana, Datadog, etc.)
-  # Disable with: helm install --set opentelemetry-collector.enabled=false
+  # Disable with: --set opentelemetry-collector.enabled=false
   # when a cluster-wide collector already exists.
   - name: opentelemetry-collector
     version: "0.108.0"
     repository: https://open-telemetry.github.io/opentelemetry-helm-charts
     condition: opentelemetry-collector.enabled
+
+  # PostgreSQL — enabled for local dev via values.local.yaml.
+  # In production, disable this and supply the connection string via a Secret.
+  - name: postgresql
+    version: "16.4.3"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled

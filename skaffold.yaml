@@ -1,0 +1,44 @@
+apiVersion: skaffold/v4beta11
+kind: Config
+metadata:
+  name: service-template
+
+build:
+  artifacts:
+    - image: localhost:5001/service-template
+      docker:
+        dockerfile: Dockerfile
+        buildArgs:
+          VERSION: dev
+  local:
+    push: true
+    useDockerCLI: true
+
+deploy:
+  helm:
+    releases:
+      - name: service-template
+        chartPath: deploy/helm/chart
+        valuesFiles:
+          - deploy/helm/chart/values.yaml
+          - deploy/helm/chart/values.local.yaml
+        # Skaffold injects the built image tag by matching image.repository in values.local.yaml
+        # against the artifact image name above. The tag is set automatically on each build.
+        setValueTemplates:
+          image.repository: "{{.IMAGE_REPO_localhost_5001_service_template}}"
+          image.tag: "{{.IMAGE_TAG_localhost_5001_service_template}}"
+        wait: true
+        skipBuildDependencies: true  # dependencies already updated via 'make helm-deps'
+    flags:
+      install: ["--timeout=5m", "--atomic"]
+      upgrade: ["--timeout=5m", "--atomic", "--cleanup-on-fail"]
+
+# Port-forward the app to localhost:8080 while 'skaffold dev' is running.
+# Skaffold cleans this up automatically on exit (Ctrl+C).
+portForward:
+  - resourceType: service
+    resourceName: service-template
+    namespace: default
+    port: 80
+    localPort: 8080
+    address: 0.0.0.0

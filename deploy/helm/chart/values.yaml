@@ -123,6 +123,22 @@ configMap:
     # regardless of the Helm release name.
     OpenTelemetry__OtlpEndpoint: "http://otel-collector:4317"
 
+# ── PostgreSQL subchart ───────────────────────────────────────────────────────
+# Disabled in production — supply the connection string via a Kubernetes Secret
+# (key: ConnectionStrings__DefaultConnection) and set envFromSecret.enabled=true.
+# Enable for local dev via values.local.yaml.
+postgresql:
+  enabled: false
+  fullnameOverride: postgresql
+  auth:
+    database: servicetemplate
+    username: postgres
+    password: postgres   # Replace with a Secret in any real environment
+  primary:
+    persistence:
+      enabled: true
+      size: 1Gi
+
 # ── OpenTelemetry Collector subchart ─────────────────────────────────────────
 # Deployed alongside the app within the same release.
 # Disable when a cluster-wide / DaemonSet collector already exists.

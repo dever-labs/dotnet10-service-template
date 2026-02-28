@@ -1,0 +1,19 @@
+# kind cluster configuration for local development.
+# Creates a single-node cluster pre-configured to pull from the local Docker registry.
+#
+# Usage: kind create cluster --name service-template --config .kind/cluster.yaml
+# (Prefer: make cluster-create — handles registry setup too)
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+
+# Tell containerd inside the kind node to resolve localhost:5001 via the
+# kind-registry container (reachable at kind-registry:5000 within the kind network).
+# This lets images pushed to localhost:5001 be pulled by the cluster without TLS.
+containerdConfigPatches:
+  - |-
+    [plugins."io.containerd.grpc.v1.cri".registry]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:5001"]
+          endpoint = ["http://kind-registry:5000"]
