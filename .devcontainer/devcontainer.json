@@ -8,6 +8,17 @@
   "image": "ghcr.io/dever-labs/devcontainers/dotnet-dev:latest",
 
   "customizations": {
+    "jetbrains": {
+      "backend": "Rider",
+      "plugins": [
+        "com.intellij.kubernetes",
+        "org.jetbrains.plugins.yaml",
+        "Docker"
+      ],
+      "settings": {
+        "editor.reformat.on.save": true
+      }
+    },
     "vscode": {
       "extensions": [
         "ms-dotnettools.csharp",
