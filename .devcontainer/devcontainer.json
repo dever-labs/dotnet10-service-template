@@ -13,7 +13,8 @@
       "plugins": [
         "com.intellij.kubernetes",
         "org.jetbrains.plugins.yaml",
-        "Docker"
+        "Docker",
+        "com.metalbear.mirrord"
       ],
       "settings": {
         "editor.reformat.on.save": true
@@ -32,7 +33,8 @@
         "mhutchie.git-graph",
         "ms-kubernetes-tools.vscode-kubernetes-tools",
         "redhat.vscode-yaml",
-        "humao.rest-client"
+        "humao.rest-client",
+        "metalbear-co.mirrord"
       ],
       "settings": {
         "editor.formatOnSave": true,

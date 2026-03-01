@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/metalbear-co/mirrord/main/mirrord-schema.json",
+
+  // Targetless mode: no pod is mirrored. The local process gets cluster
+  // network access (DNS, services) without stealing traffic from any pod.
+  // This is the right mode when developing against fake near-dependencies
+  // deployed into the local kind cluster.
+  "target": "targetless",
+
+  "feature": {
+    "network": {
+      // Route outgoing traffic through the cluster so service DNS names
+      // resolve — e.g. http://team-a-service-fake resolves to the pod in k8s.
+      "outgoing": true
+    },
+    // Inject cluster environment variables into the local process.
+    // Keeps parity with how the app sees its environment when deployed.
+    "env": true,
+    // Use local filesystem — do not mirror cluster pod's filesystem.
+    "fs": "local"
+  }
+}
