@@ -25,6 +25,6 @@ dependencies:
   # PostgreSQL — enabled for local dev via values.local.yaml.
   # In production, disable this and supply the connection string via a Secret.
   - name: postgresql
-    version: "16.4.3"
+    version: 18.5.5
     repository: https://charts.bitnami.com/bitnami
     condition: postgresql.enabled
