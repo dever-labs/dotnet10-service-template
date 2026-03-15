@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <ProjectReference Include="..\..\src\Api\ServiceTemplate.Api.csproj" />
   </ItemGroup>
 
