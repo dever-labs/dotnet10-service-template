@@ -14,6 +14,9 @@
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="Respawn" />
     <PackageReference Include="Bogus" />
+
+    <!-- Security: ensure patched System.Drawing.Common (CVE-2021-24112) even if transitive -->
+    <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
 
   <ItemGroup>

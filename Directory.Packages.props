@@ -50,5 +50,8 @@
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.2.0" />
     <PackageVersion Include="Bogus" Version="35.6.1" />
     <PackageVersion Include="Respawn" Version="6.2.1" />
+
+    <!-- Security: pin transitive dependency to patched version (Dependabot alert #1 / CVE-2021-24112) -->
+    <PackageVersion Include="System.Drawing.Common" Version="5.0.3" />
   </ItemGroup>
 </Project>
