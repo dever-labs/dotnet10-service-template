@@ -3,6 +3,8 @@ root = true
 # EF Core auto-generated migration files — skip style analysis
 [**/Migrations/**.cs]
 generated_code = true
+dotnet_diagnostic.CA1062.severity = none
+dotnet_diagnostic.CA1707.severity = none
 
 [*]
 indent_style = space
