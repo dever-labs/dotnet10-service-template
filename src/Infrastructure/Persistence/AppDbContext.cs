@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using ServiceTemplate.Application.Common.Events;
 using ServiceTemplate.Application.Common.Interfaces;
 using ServiceTemplate.Domain.Common;
 using ServiceTemplate.Domain.Todos;
 
 namespace ServiceTemplate.Infrastructure.Persistence;
 
-public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IUnitOfWork
+public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IDomainEventDispatcher domainEventDispatcher)
+    : DbContext(options), IUnitOfWork
 {
     public DbSet<Todo> Todos => Set<Todo>();
 
@@ -18,7 +20,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        // Dispatch domain events before saving
         var domainEvents = ChangeTracker
             .Entries<Entity>()
             .SelectMany(e => e.Entity.DomainEvents)
@@ -31,8 +32,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
         var result = await base.SaveChangesAsync(cancellationToken);
 
-        // TODO: Dispatch domainEvents via IPublisher if needed
-        _ = domainEvents;
+        await domainEventDispatcher.DispatchAsync(domainEvents, cancellationToken);
 
         return result;
     }

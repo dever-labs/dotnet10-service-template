@@ -3,7 +3,8 @@ namespace ServiceTemplate.Domain.Common;
 /// <summary>Base class for all domain entities.</summary>
 public abstract class Entity
 {
-    public Guid Id { get; protected set; } = Guid.NewGuid();
+    // Version 7 UUIDs are time-sortable, improving PostgreSQL B-tree index performance.
+    public Guid Id { get; protected set; } = Guid.CreateVersion7();
     public DateTimeOffset CreatedAt { get; protected set; }
     public DateTimeOffset UpdatedAt { get; protected set; }
 
