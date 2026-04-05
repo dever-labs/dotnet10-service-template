@@ -2,7 +2,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS restore
 WORKDIR /src
 
-COPY global.json nuget.config Directory.Build.props Directory.Packages.props ./
+COPY global.json NuGet.Config Directory.Build.props Directory.Packages.props ./
 COPY src/Api/ServiceTemplate.Api.csproj                             src/Api/
 COPY src/Application/ServiceTemplate.Application.csproj             src/Application/
 COPY src/Domain/ServiceTemplate.Domain.csproj                       src/Domain/
