@@ -25,7 +25,7 @@ public sealed class CreateTodoCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ValidCommand_ReturnsTodoResponse()
+    public async Task Handle_ValidCommand_ReturnsTodoResponseAsync()
     {
         // Arrange
         var command = new CreateTodoCommand(
@@ -43,7 +43,7 @@ public sealed class CreateTodoCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ValidCommand_PersistsTodo()
+    public async Task Handle_ValidCommand_PersistsTodoAsync()
     {
         // Arrange
         var command = new CreateTodoCommand(Faker.Lorem.Sentence(3), null, null);
@@ -59,7 +59,7 @@ public sealed class CreateTodoCommandHandlerTests
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public async Task Handle_EmptyTitle_ReturnsFailure(string title)
+    public async Task Handle_EmptyTitle_ReturnsFailureAsync(string title)
     {
         // Arrange
         var command = new CreateTodoCommand(title, null, null);
@@ -73,7 +73,7 @@ public sealed class CreateTodoCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_TitleExceeds200Chars_ReturnsFailure()
+    public async Task Handle_TitleExceeds200Chars_ReturnsFailureAsync()
     {
         // Arrange
         var command = new CreateTodoCommand(new string('x', 201), null, null);

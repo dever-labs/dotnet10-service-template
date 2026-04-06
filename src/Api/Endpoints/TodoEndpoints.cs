@@ -1,11 +1,14 @@
 using ServiceTemplate.Application.Common.Cqrs;
 using Microsoft.AspNetCore.Mvc;
+using ServiceTemplate.Api.Extensions;
 using ServiceTemplate.Application.Todos;
+using ServiceTemplate.Application.Todos.Commands.CompleteTodo;
 using ServiceTemplate.Application.Todos.Commands.CreateTodo;
 using ServiceTemplate.Application.Todos.Commands.DeleteTodo;
 using ServiceTemplate.Application.Todos.Commands.UpdateTodo;
 using ServiceTemplate.Application.Todos.Queries.GetTodo;
 using ServiceTemplate.Application.Todos.Queries.GetTodos;
+using ServiceTemplate.Domain.Todos;
 
 namespace ServiceTemplate.Api.Endpoints;
 
@@ -39,6 +42,13 @@ internal static class TodoEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem();
 
+        group.MapPatch("/{id:guid}/complete", CompleteTodoAsync)
+            .WithName("CompleteTodo")
+            .WithSummary("Mark a todo as completed")
+            .Produces<TodoResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
         group.MapDelete("/{id:guid}", DeleteTodoAsync)
             .WithName("DeleteTodo")
             .WithSummary("Delete a todo")
@@ -49,12 +59,13 @@ internal static class TodoEndpoints
     }
 
     private static async Task<IResult> GetTodosAsync(
-        [FromQuery] int page,
-        [FromQuery] int pageSize,
-        ISender sender,
-        CancellationToken cancellationToken)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] TodoStatus? status = null,
+        ISender? sender = null,
+        CancellationToken cancellationToken = default)
     {
-        var result = await sender.SendAsync(new GetTodosQuery(page, pageSize), cancellationToken);
+        var result = await sender!.SendAsync(new GetTodosQuery(page, pageSize, status), cancellationToken);
         return Results.Ok(result);
     }
 
@@ -64,7 +75,7 @@ internal static class TodoEndpoints
 
         return result.Match(
             todo => Results.Ok(todo),
-            error => Results.Problem(detail: error.Description, statusCode: StatusCodes.Status404NotFound));
+            error => error.ToProblemResult());
     }
 
     private static async Task<IResult> CreateTodoAsync(
@@ -76,7 +87,7 @@ internal static class TodoEndpoints
 
         return result.Match(
             todo => Results.CreatedAtRoute("GetTodo", new { id = todo.Id }, todo),
-            error => Results.Problem(detail: error.Description, statusCode: StatusCodes.Status400BadRequest));
+            error => error.ToProblemResult());
     }
 
     private static async Task<IResult> UpdateTodoAsync(
@@ -91,9 +102,16 @@ internal static class TodoEndpoints
 
         return result.Match(
             todo => Results.Ok(todo),
-            error => error.Code.Contains("NotFound", StringComparison.Ordinal)
-                ? Results.Problem(detail: error.Description, statusCode: StatusCodes.Status404NotFound)
-                : Results.Problem(detail: error.Description, statusCode: StatusCodes.Status400BadRequest));
+            error => error.ToProblemResult());
+    }
+
+    private static async Task<IResult> CompleteTodoAsync(Guid id, ISender sender, CancellationToken cancellationToken)
+    {
+        var result = await sender.SendAsync(new CompleteTodoCommand(id), cancellationToken);
+
+        return result.Match(
+            todo => Results.Ok(todo),
+            error => error.ToProblemResult());
     }
 
     private static async Task<IResult> DeleteTodoAsync(Guid id, ISender sender, CancellationToken cancellationToken)
@@ -102,7 +120,7 @@ internal static class TodoEndpoints
 
         return result.Match(
             _ => Results.NoContent(),
-            error => Results.Problem(detail: error.Description, statusCode: StatusCodes.Status404NotFound));
+            error => error.ToProblemResult());
     }
 }
 
