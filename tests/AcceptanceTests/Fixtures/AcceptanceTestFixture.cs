@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using ServiceTemplate.Infrastructure.Persistence;
@@ -32,6 +33,13 @@ public sealed class AcceptanceTestFixture : IAsyncLifetime
             .WithWebHostBuilder(host =>
             {
                 host.UseEnvironment("Test");
+                host.ConfigureAppConfiguration(cfg =>
+                    cfg.AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        // Override connection string so the NpgSql health check and EF Core
+                        // both target the Testcontainers instance, not localhost:5432
+                        ["ConnectionStrings:DefaultConnection"] = _dbContainer.GetConnectionString(),
+                    }));
                 host.ConfigureServices(services =>
                 {
                     services.RemoveAll<DbContextOptions<AppDbContext>>();

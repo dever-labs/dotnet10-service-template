@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog;
+using Serilog.Core;
 using Serilog.Sinks.Syslog;
 using ServiceTemplate.Application.Common.Logging;
 
@@ -23,11 +24,19 @@ public sealed class SyslogAuditLogger : IAuditLogger, IDisposable
     // 32473 is the IANA-designated "example" PEN; replace with your own for production.
     private const string SdId = "audit@32473";
 
+    private static readonly Action<ILogger<SyslogAuditLogger>, string, string, string, string, string, Exception?> LogAuditFallback =
+        LoggerMessage.Define<string, string, string, string, string>(
+            LogLevel.Information,
+            new EventId(100, "AuditEvent"),
+            "[audit] {AuditAction} {Outcome} | {EntityType} {EntityId} | ErrorCode={ErrorCode}");
+
     private readonly ILogger<SyslogAuditLogger>? _fallback;
-    private readonly Serilog.ILogger? _syslog;
+    private readonly Logger? _syslog;
 
     public SyslogAuditLogger(IOptions<AuditLogOptions> options, ILogger<SyslogAuditLogger> fallback)
     {
+        ArgumentNullException.ThrowIfNull(options);
+
         var opts = options.Value;
 
         if (opts.UseSyslog)
@@ -52,6 +61,8 @@ public sealed class SyslogAuditLogger : IAuditLogger, IDisposable
 
     public void Log(AuditEvent auditEvent)
     {
+        ArgumentNullException.ThrowIfNull(auditEvent);
+
         if (_syslog is not null)
         {
             // RFC 5424: context properties → STRUCTURED-DATA block
@@ -72,15 +83,16 @@ public sealed class SyslogAuditLogger : IAuditLogger, IDisposable
         }
         else
         {
-            _fallback!.LogInformation(
-                "[audit] {AuditAction} {Outcome} | {EntityType} {EntityId} | ErrorCode={ErrorCode}",
+            LogAuditFallback(
+                _fallback!,
                 auditEvent.Action,
-                auditEvent.Outcome,
+                auditEvent.Outcome.ToString(),
                 auditEvent.EntityType,
                 auditEvent.EntityId ?? "-",
-                auditEvent.ErrorCode ?? "-");
+                auditEvent.ErrorCode ?? "-",
+                null);
         }
     }
 
-    public void Dispose() => (_syslog as IDisposable)?.Dispose();
+    public void Dispose() => _syslog?.Dispose();
 }
