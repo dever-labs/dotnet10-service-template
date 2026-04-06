@@ -5,7 +5,7 @@ public sealed class AuditLogOptions
     public const string SectionName = "AuditLog";
 
     /// <summary>Send audit events to a syslog server over UDP (RFC 5424).</summary>
-    public bool UseSyslog { get; init; } = false;
+    public bool UseSyslog { get; init; }
 
     public string SyslogHost { get; init; } = "localhost";
 

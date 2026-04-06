@@ -1,9 +1,9 @@
 # Staging environment overrides.
 #
-# Stored at the repo root — outside charts/ so it is NOT packaged into the Helm chart.
+# Stored at the repo root — outside deploy/ so it is NOT packaged into the Helm chart.
 # Apply via your CI/CD pipeline:
 #   helm upgrade --install service-template charts \
-#     -f charts/values.yaml \
+#     -f deploy/values.yaml \
 #     -f values.staging.yaml \
 #     --set image.tag=<version>
 #
