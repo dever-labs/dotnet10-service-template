@@ -15,9 +15,9 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <DebugType>embedded</DebugType>
 
-    <!-- NU1900: NuGet audit warning when a source (e.g. org proxy) is unreachable.
-         Kept as a visible warning but not an error — the audit source being offline
-         is expected in environments without the internal proxy. -->
+    <!-- NU1900: NuGet audit warning when the org proxy is unreachable.
+         Kept as a visible warning but not an error — this is expected in environments
+         without the internal proxy configured. -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1900</WarningsNotAsErrors>
 
     <!-- CA2007: ConfigureAwait(false) is a library concern, not applicable to application
