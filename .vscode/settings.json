@@ -9,7 +9,7 @@
     "**/obj": true,
     "**/.git": false
   },
-  "dotnet.defaultSolution": "ServiceTemplate.slnx",
+  "dotnet.defaultSolution": "ServiceTemplate.sln",
 
   // ── GitHub Copilot ──────────────────────────────────────────────────────────
   "github.copilot.enable": {
