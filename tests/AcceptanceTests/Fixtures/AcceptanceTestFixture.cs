@@ -15,8 +15,7 @@ namespace ServiceTemplate.AcceptanceTests.Fixtures;
 /// </summary>
 public sealed class AcceptanceTestFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
-        .WithImage("postgres:17-alpine")
+    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder("postgres:17-alpine")
         .WithDatabase("acceptance_tests")
         .WithUsername("postgres")
         .WithPassword("postgres")
