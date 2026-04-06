@@ -2,11 +2,14 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using ServiceTemplate.Application.Common.Behaviors;
 using ServiceTemplate.Application.Common.Cqrs;
+using ServiceTemplate.Application.Common.Events;
 using ServiceTemplate.Application.Common.Telemetry;
+using ServiceTemplate.Application.Todos.Events;
+using ServiceTemplate.Domain.Todos;
 
 namespace ServiceTemplate.Application;
 
-public static class DependencyInjection
+public static class ApplicationServiceExtensions
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
@@ -14,7 +17,7 @@ public static class DependencyInjection
         services.AddScoped<ISender, Sender>();
 
         // Register all request handlers from this assembly
-        var assembly = typeof(DependencyInjection).Assembly;
+        var assembly = typeof(ApplicationServiceExtensions).Assembly;
         foreach (var type in assembly.GetTypes().Where(t => t is { IsAbstract: false, IsInterface: false }))
         {
             foreach (var iface in type.GetInterfaces().Where(i =>
@@ -35,6 +38,9 @@ public static class DependencyInjection
 
         // Custom metrics — exported via OTel; meter registered in Program.cs
         services.AddSingleton<ITodoMetrics, TodoMetrics>();
+
+        // Domain event listeners
+        services.AddScoped<IDomainEventListener<TodoCreatedEvent>, TodoCreatedEventListener>();
 
         return services;
     }

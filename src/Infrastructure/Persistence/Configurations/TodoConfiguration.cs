@@ -8,6 +8,8 @@ public sealed class TodoConfiguration : IEntityTypeConfiguration<Todo>
 {
     public void Configure(EntityTypeBuilder<Todo> builder)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         builder.HasKey(t => t.Id);
 
         builder.Property(t => t.Title)

@@ -15,10 +15,12 @@ public sealed class AuditBehavior<TRequest, TResponse>(IAuditLogger auditLogger)
 {
     public async Task<TResponse> HandleAsync(
         TRequest request,
-        RequestHandlerDelegate<TResponse> next,
+        RequestHandlerFunc<TResponse> nextHandler,
         CancellationToken cancellationToken = default)
     {
-        var response = await next(cancellationToken);
+        ArgumentNullException.ThrowIfNull(nextHandler);
+
+        var response = await nextHandler(cancellationToken);
 
         if (request is not IAuditableRequest auditable)
         {

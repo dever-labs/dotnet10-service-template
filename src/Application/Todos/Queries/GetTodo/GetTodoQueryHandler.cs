@@ -9,6 +9,7 @@ public sealed class GetTodoQueryHandler(ITodoRepository repository) : IRequestHa
 {
     public async Task<Result<TodoResponse>> HandleAsync(GetTodoQuery request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
         var todo = await repository.GetByIdAsync(request.Id, cancellationToken);
 
         if (todo is null)
