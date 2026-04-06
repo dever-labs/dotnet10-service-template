@@ -33,11 +33,14 @@ public readonly record struct Result<T>
     }
 }
 
-/// <summary>Represents a domain error with a code and description.</summary>
-public readonly record struct DomainError(string Code, string Description)
+/// <summary>Discriminates the category of a <see cref="DomainError"/> so callers can map to HTTP status codes without string-sniffing the Code.</summary>
+public enum ErrorType { Validation, NotFound, Conflict, Unexpected }
+
+/// <summary>Represents a domain error with a code, description, and type.</summary>
+public readonly record struct DomainError(string Code, string Description, ErrorType Type)
 {
-    public static DomainError NotFound(string code, string description) => new(code, description);
-    public static DomainError Validation(string code, string description) => new(code, description);
-    public static DomainError Conflict(string code, string description) => new(code, description);
-    public static DomainError Unexpected(string code, string description) => new(code, description);
+    public static DomainError NotFound(string code, string description) => new(code, description, ErrorType.NotFound);
+    public static DomainError Validation(string code, string description) => new(code, description, ErrorType.Validation);
+    public static DomainError Conflict(string code, string description) => new(code, description, ErrorType.Conflict);
+    public static DomainError Unexpected(string code, string description) => new(code, description, ErrorType.Unexpected);
 }
