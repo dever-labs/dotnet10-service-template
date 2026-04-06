@@ -17,8 +17,7 @@ namespace ServiceTemplate.IntegrationTests.Fixtures;
 /// </summary>
 public sealed class IntegrationTestFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
-        .WithImage("postgres:17-alpine")
+    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder("postgres:17-alpine")
         .WithDatabase("integration_tests")
         .WithUsername("postgres")
         .WithPassword("postgres")
