@@ -2,7 +2,10 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using ServiceTemplate.Application.Common.Behaviors;
 using ServiceTemplate.Application.Common.Cqrs;
+using ServiceTemplate.Application.Common.Events;
 using ServiceTemplate.Application.Common.Telemetry;
+using ServiceTemplate.Application.Todos.Events;
+using ServiceTemplate.Domain.Todos;
 
 namespace ServiceTemplate.Application;
 
@@ -35,6 +38,9 @@ public static class ApplicationServiceExtensions
 
         // Custom metrics — exported via OTel; meter registered in Program.cs
         services.AddSingleton<ITodoMetrics, TodoMetrics>();
+
+        // Domain event listeners
+        services.AddScoped<IDomainEventListener<TodoCreatedEvent>, TodoCreatedEventListener>();
 
         return services;
     }
