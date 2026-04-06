@@ -37,21 +37,13 @@ updates:
       - dotnet
 
   # ── GitHub Actions ────────────────────────────────────────────────────────────
-  - package-ecosystem: github-actions
-    directory: /
-    schedule:
-      interval: weekly
-      day: monday
-      time: "08:00"
-      timezone: UTC
-    open-pull-requests-limit: 5
-    labels:
-      - dependencies
-      - github-actions
+  # Actions are pinned to full commit SHAs per org policy.
+  # Dependabot does not preserve SHA pins (it reverts to tags), so
+  # action updates are managed manually.
 
   # ── Helm chart dependencies ───────────────────────────────────────────────────
   - package-ecosystem: helm
-    directory: /charts
+    directory: /deploy/helm
     schedule:
       interval: weekly
       day: monday

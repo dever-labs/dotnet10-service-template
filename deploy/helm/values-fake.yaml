@@ -1,0 +1,39 @@
+# Fake (local dev) overrides — consumed by other teams' devcontainers.
+# CI merges these over values.yaml to produce the service-template-fake helm chart.
+# Consuming teams reference service-template-fake and need zero configuration.
+
+image:
+  repository: ghcr.io/your-org/service-template-fake
+  tag: ""           # overridden by CI with the release tag
+  pullPolicy: Always
+
+replicaCount: 1
+
+# No external secrets needed — fake has no DB
+envFromSecret:
+  enabled: false
+
+# Disable heavy subcharts for local dev
+postgresql:
+  enabled: false
+
+opentelemetry-collector:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: false
+
+topologySpreadConstraints: []
+
+affinity: {}

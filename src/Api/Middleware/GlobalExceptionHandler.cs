@@ -7,14 +7,18 @@ namespace ServiceTemplate.Api.Middleware;
 /// <summary>
 /// Global exception handler that converts unhandled exceptions to RFC 7807 ProblemDetails responses.
 /// </summary>
-public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
+#pragma warning disable CA1812 // Registered and instantiated by AddExceptionHandler<T>() via DI
+internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
+    private static readonly Action<ILogger, string, Exception> LogUnhandled =
+        LoggerMessage.Define<string>(LogLevel.Error, new EventId(500, "UnhandledException"), "Unhandled exception: {Message}");
+
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,
         CancellationToken cancellationToken)
     {
-        logger.LogError(exception, "Unhandled exception: {Message}", exception.Message);
+        LogUnhandled(logger, exception.Message, exception);
 
         var (statusCode, title) = exception switch
         {

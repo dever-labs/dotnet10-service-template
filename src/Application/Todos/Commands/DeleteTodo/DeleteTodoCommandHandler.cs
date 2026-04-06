@@ -13,6 +13,7 @@ public sealed class DeleteTodoCommandHandler(
 {
     public async Task<Result<bool>> HandleAsync(DeleteTodoCommand request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
         var todo = await repository.GetByIdAsync(request.Id, cancellationToken);
 
         if (todo is null)
