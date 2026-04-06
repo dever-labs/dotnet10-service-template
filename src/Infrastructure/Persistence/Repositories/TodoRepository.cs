@@ -10,9 +10,16 @@ public sealed class TodoRepository(AppDbContext dbContext) : ITodoRepository
         dbContext.Todos.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
 
     public async Task<(IReadOnlyList<Todo> Items, int TotalCount)> GetPagedAsync(
-        int page, int pageSize, CancellationToken cancellationToken = default)
+        int page, int pageSize, TodoStatus? status = null, CancellationToken cancellationToken = default)
     {
-        var query = dbContext.Todos.AsNoTracking().OrderByDescending(t => t.CreatedAt);
+        var query = dbContext.Todos.AsNoTracking();
+
+        if (status.HasValue)
+        {
+            query = query.Where(t => t.Status == status.Value);
+        }
+
+        query = query.OrderByDescending(t => t.CreatedAt);
 
         var total = await query.CountAsync(cancellationToken);
         var items = await query

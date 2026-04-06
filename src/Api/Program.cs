@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -55,7 +56,9 @@ try
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddSingleton(TimeProvider.System);
     builder.Services.AddHealthChecks()
-        .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!);
+        .AddNpgSql(sp => sp.GetRequiredService<IConfiguration>().GetConnectionString("DefaultConnection")!,
+            name: "postgres",
+            tags: ["ready"]);
 
     // ── Build ─────────────────────────────────────────────────────────────────
     var app = builder.Build();
@@ -72,21 +75,38 @@ try
 
     if (app.Environment.IsDevelopment())
     {
-        app.MapOpenApi();
+        // URL pinned to /openapi/v1.json for stable Scalar/tooling integration regardless of document name
+        app.MapOpenApi("/openapi/v1.json");
         app.MapScalarApiReference("/scalar");
     }
+    else if (app.Environment.IsEnvironment("Test"))
+    {
+        // Also expose the spec in Test environment — used by `make generate-openapi` (no DB needed)
+        app.MapOpenApi("/openapi/v1.json");
+    }
 
-    app.MapHealthChecks("/health");
-    app.MapHealthChecks("/ready");
+    // Liveness: just checks the process is alive — no external dependencies
+    app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = _ => false,
+    });
+
+    // Readiness: checks all tagged "ready" dependencies (e.g. Postgres)
+    app.MapHealthChecks("/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = hc => hc.Tags.Contains("ready"),
+    });
     app.MapTodoEndpoints();
 
     await app.RunAsync();
 }
 catch (Exception ex) when (ex is not OperationCanceledException)
 {
-    Console.Error.WriteLine($"Application startup failed: {ex}");
+    await Console.Error.WriteLineAsync($"Application startup failed: {ex}");
     throw;
 }
 
 // Required for WebApplicationFactory in integration/acceptance tests
+#pragma warning disable CA1515 // Must be public — WebApplicationFactory<Program> in test assemblies requires it
 public partial class Program;
+#pragma warning restore CA1515

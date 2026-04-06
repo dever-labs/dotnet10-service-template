@@ -14,7 +14,7 @@ public sealed class GetTodoQueryHandlerTests
     public GetTodoQueryHandlerTests() => _sut = new GetTodoQueryHandler(_repository);
 
     [Fact]
-    public async Task Handle_ExistingTodo_ReturnsTodo()
+    public async Task Handle_ExistingTodo_ReturnsTodoAsync()
     {
         // Arrange
         var todo = Todo.Create("Test todo", null, null, TimeProvider.System).Value;
@@ -29,7 +29,7 @@ public sealed class GetTodoQueryHandlerTests
     }
 
     [Fact]
-    public async Task Handle_NonExistingTodo_ReturnsNotFoundError()
+    public async Task Handle_NonExistingTodo_ReturnsNotFoundErrorAsync()
     {
         // Arrange
         _repository.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((Todo?)null);

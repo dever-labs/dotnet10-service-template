@@ -15,7 +15,7 @@ public sealed class TodoIntegrationTests(IntegrationTestFixture fixture) : IAsyn
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
-    public async Task CreateTodo_ValidRequest_Returns201WithTodo()
+    public async Task CreateTodo_ValidRequest_Returns201WithTodoAsync()
     {
         // Arrange
         var request = new { Title = Faker.Lorem.Sentence(3), Description = Faker.Lorem.Paragraph() };
@@ -31,7 +31,7 @@ public sealed class TodoIntegrationTests(IntegrationTestFixture fixture) : IAsyn
     }
 
     [Fact]
-    public async Task GetTodo_ExistingTodo_Returns200()
+    public async Task GetTodo_ExistingTodo_Returns200Async()
     {
         // Arrange
         var created = await CreateTodoAsync();
@@ -46,14 +46,65 @@ public sealed class TodoIntegrationTests(IntegrationTestFixture fixture) : IAsyn
     }
 
     [Fact]
-    public async Task GetTodo_NonExistentId_Returns404()
+    public async Task GetTodo_NonExistentId_Returns404Async()
     {
         var response = await fixture.Client.GetAsync($"/api/todos/{Guid.NewGuid()}");
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
-    public async Task DeleteTodo_ExistingTodo_Returns204()
+    public async Task GetTodos_WithStatusFilter_ReturnsFilteredResultsAsync()
+    {
+        // Arrange — create one open todo and complete another
+        var open = await CreateTodoAsync();
+        var toComplete = await CreateTodoAsync();
+        await fixture.Client.PatchAsync($"/api/todos/{toComplete!.Id}/complete", null);
+
+        // Act
+        var response = await fixture.Client.GetAsync("/api/todos?status=Open");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task CompleteTodo_OpenTodo_Returns200WithDoneStatusAsync()
+    {
+        // Arrange
+        var created = await CreateTodoAsync();
+
+        // Act
+        var response = await fixture.Client.PatchAsync($"/api/todos/{created!.Id}/complete", null);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var todo = await response.Content.ReadFromJsonAsync<TodoResponse>();
+        todo!.Status.Should().Be("Done");
+    }
+
+    [Fact]
+    public async Task CompleteTodo_AlreadyCompleted_Returns409Async()
+    {
+        // Arrange
+        var created = await CreateTodoAsync();
+        await fixture.Client.PatchAsync($"/api/todos/{created!.Id}/complete", null);
+
+        // Act — complete again
+        var response = await fixture.Client.PatchAsync($"/api/todos/{created.Id}/complete", null);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task CompleteTodo_NonExistentId_Returns404Async()
+    {
+        var response = await fixture.Client.PatchAsync($"/api/todos/{Guid.NewGuid()}/complete", null);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task DeleteTodo_ExistingTodo_Returns204Async()
     {
         // Arrange
         var created = await CreateTodoAsync();
@@ -66,7 +117,7 @@ public sealed class TodoIntegrationTests(IntegrationTestFixture fixture) : IAsyn
     }
 
     [Fact]
-    public async Task CreateTodo_EmptyTitle_Returns422()
+    public async Task CreateTodo_EmptyTitle_Returns422Async()
     {
         var request = new { Title = "" };
         var response = await fixture.Client.PostAsJsonAsync("/api/todos", request);

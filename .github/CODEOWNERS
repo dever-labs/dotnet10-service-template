@@ -3,6 +3,6 @@
 
 * @your-org/platform-team
 
-/deploy/helm/         @your-org/platform-team
+/charts/              @your-org/platform-team
 /.github/             @your-org/platform-team
 /src/Infrastructure/  @your-org/platform-team

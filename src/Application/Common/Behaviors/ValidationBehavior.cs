@@ -8,11 +8,13 @@ public sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidat
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
-    public async Task<TResponse> HandleAsync(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken = default)
+    public async Task<TResponse> HandleAsync(TRequest request, RequestHandlerFunc<TResponse> nextHandler, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(nextHandler);
+
         if (!validators.Any())
         {
-            return await next(cancellationToken);
+            return await nextHandler(cancellationToken);
         }
 
         var context = new ValidationContext<TRequest>(request);
@@ -30,6 +32,6 @@ public sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidat
             throw new ValidationException(failures);
         }
 
-        return await next(cancellationToken);
+        return await nextHandler(cancellationToken);
     }
 }

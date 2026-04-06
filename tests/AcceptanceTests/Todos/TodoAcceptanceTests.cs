@@ -15,7 +15,7 @@ public sealed class TodoAcceptanceTests(AcceptanceTestFixture fixture)
     // ── Feature: Manage Todos ─────────────────────────────────────────────────
 
     [Fact(DisplayName = "Given a valid todo, when it is created, then it should be retrievable")]
-    public async Task CreateAndRetrieveTodo()
+    public async Task CreateAndRetrieveTodoAsync()
     {
         // Given
         var title = "Buy groceries";
@@ -39,7 +39,7 @@ public sealed class TodoAcceptanceTests(AcceptanceTestFixture fixture)
     }
 
     [Fact(DisplayName = "Given an existing todo, when it is updated, then the changes should be persisted")]
-    public async Task UpdateTodo_PersistsChanges()
+    public async Task UpdateTodo_PersistsChangesAsync()
     {
         // Given
         var createResponse = await fixture.Client.PostAsJsonAsync("/api/todos", new { Title = "Original title" });
@@ -60,7 +60,7 @@ public sealed class TodoAcceptanceTests(AcceptanceTestFixture fixture)
     }
 
     [Fact(DisplayName = "Given an existing todo, when it is deleted, then it should no longer be findable")]
-    public async Task DeleteTodo_RemovesItFromTheSystem()
+    public async Task DeleteTodo_RemovesItFromTheSystemAsync()
     {
         // Given
         var createResponse = await fixture.Client.PostAsJsonAsync("/api/todos", new { Title = "To be deleted" });
@@ -76,7 +76,7 @@ public sealed class TodoAcceptanceTests(AcceptanceTestFixture fixture)
     }
 
     [Fact(DisplayName = "Given an empty title, when creating a todo, then validation should fail")]
-    public async Task CreateTodo_EmptyTitle_ReturnsValidationError()
+    public async Task CreateTodo_EmptyTitle_ReturnsValidationErrorAsync()
     {
         // When
         var response = await fixture.Client.PostAsJsonAsync("/api/todos", new { Title = "" });
@@ -86,7 +86,7 @@ public sealed class TodoAcceptanceTests(AcceptanceTestFixture fixture)
     }
 
     [Fact(DisplayName = "Given health check endpoint, when called, then it should return healthy")]
-    public async Task HealthCheck_ReturnsHealthy()
+    public async Task HealthCheck_ReturnsHealthyAsync()
     {
         var response = await fixture.Client.GetAsync("/health");
         response.StatusCode.Should().Be(HttpStatusCode.OK);

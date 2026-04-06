@@ -4,13 +4,14 @@ SHELL := /bin/bash
 
 # ── Variables ──────────────────────────────────────────────────────────────────
 PROJECT        := ServiceTemplate
-SOLUTION       := ServiceTemplate.slnx
+SOLUTION       := ServiceTemplate.sln
 SRC_API        := src/Api
 VERSION        ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "0.0.1-local")
 CLUSTER_NAME   := service-template
 REGISTRY       := localhost:5001
 IMAGE          := $(REGISTRY)/service-template
-HELM_CHART     := deploy/helm/chart
+HELM_CHART     := deploy/helm
+HELM_FAKE      := deploy/fake
 HELM_RELEASE   := service-template
 NAMESPACE      := default
 
@@ -66,17 +67,27 @@ cluster-status: ## Show cluster nodes, registry, and Helm release status
 	@helm list -n $(NAMESPACE) 2>/dev/null || true
 
 # ── Dev loop ───────────────────────────────────────────────────────────────────
+.PHONY: dev-deps
+dev-deps: ## Deploy fake near-dependencies into local kind cluster
+	helm dependency update $(HELM_FAKE)
+	helm upgrade --install dev-deps $(HELM_FAKE) \
+		-f $(HELM_FAKE)/values.yaml \
+		--namespace $(NAMESPACE) \
+		--wait --timeout 5m
+
+.PHONY: dev-deps-delete
+dev-deps-delete: ## Remove fake near-dependencies from local cluster
+	helm uninstall dev-deps --namespace $(NAMESPACE) 2>/dev/null || true
+
 .PHONY: dev
-dev: ## Build, deploy and watch for changes (skaffold dev + port-forward :8080)
-	skaffold dev --port-forward
+dev: ## Run the API locally with cluster network access via mirrord (requires: make cluster-create && make dev-deps)
+	mirrord exec --config .mirrord/mirrord.json -- \
+		dotnet watch run --project $(SRC_API) --launch-profile Development
 
 .PHONY: dev-run
-dev-run: ## One-shot build and deploy (no file watching)
-	skaffold run --port-forward
-
-.PHONY: dev-delete
-dev-delete: ## Remove the skaffold-managed release from the cluster
-	skaffold delete
+dev-run: ## One-shot run without file watching
+	mirrord exec --config .mirrord/mirrord.json -- \
+		dotnet run --project $(SRC_API) --launch-profile Development
 
 # ── Build ──────────────────────────────────────────────────────────────────────
 .PHONY: build
@@ -167,20 +178,20 @@ helm-deps: ## Download/update Helm chart dependencies (subcharts)
 
 .PHONY: helm-lint
 helm-lint: ## Lint the Helm chart
-	helm lint $(HELM_CHART) -f $(HELM_CHART)/values.local.yaml
+	helm lint $(HELM_CHART) -f values.local.yaml
 
 .PHONY: helm-template
 helm-template: ## Render Helm templates with local values (dry run)
 	helm template $(HELM_RELEASE) $(HELM_CHART) \
 		-f $(HELM_CHART)/values.yaml \
-		-f $(HELM_CHART)/values.local.yaml \
+		-f values.local.yaml \
 		--debug
 
 .PHONY: helm-install
 helm-install: ## Install chart to local cluster
 	helm upgrade --install $(HELM_RELEASE) $(HELM_CHART) \
 		-f $(HELM_CHART)/values.yaml \
-		-f $(HELM_CHART)/values.local.yaml \
+		-f values.local.yaml \
 		--namespace $(NAMESPACE) \
 		--wait --timeout 5m \
 		--set image.tag=$(VERSION)
