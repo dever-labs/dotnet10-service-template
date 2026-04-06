@@ -1,10 +1,12 @@
 # Local development overrides for the kind cluster.
 #
+# Stored at the repo root — outside deploy/ so it is NOT packaged into the Helm chart.
+#
 # Applied on top of values.yaml by skaffold and make targets:
 #   skaffold dev
-#   helm upgrade --install service-template deploy/helm/chart \
-#     -f deploy/helm/chart/values.yaml \
-#     -f deploy/helm/chart/values.local.yaml
+#   helm upgrade --install service-template charts \
+#     -f deploy/values.yaml \
+#     -f values.local.yaml
 #
 # DO NOT use in staging or production.
 

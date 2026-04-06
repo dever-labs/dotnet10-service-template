@@ -8,6 +8,7 @@ public interface ITodoMetrics
     void RecordCreated();
     void RecordUpdated();
     void RecordDeleted();
+    void RecordCompleted();
 }
 
 /// <summary>
@@ -34,6 +35,7 @@ public sealed class TodoMetrics : ITodoMetrics, IDisposable
     private readonly Counter<long> _created;
     private readonly Counter<long> _updated;
     private readonly Counter<long> _deleted;
+    private readonly Counter<long> _completed;
 
     // Tracks current live (non-completed) todos; can go up AND down
     private readonly UpDownCounter<long> _active;
@@ -57,6 +59,11 @@ public sealed class TodoMetrics : ITodoMetrics, IDisposable
             unit: "{todo}",
             description: "Total number of todo items deleted.");
 
+        _completed = _meter.CreateCounter<long>(
+            name: "todos.completed",
+            unit: "{todo}",
+            description: "Total number of todo items completed.");
+
         // UpDownCounter models a value that rises and falls over time.
         // Increment on create; decrement on delete so dashboards show the live count.
         _active = _meter.CreateUpDownCounter<long>(
@@ -79,6 +86,13 @@ public sealed class TodoMetrics : ITodoMetrics, IDisposable
     public void RecordDeleted()
     {
         _deleted.Add(1);
+        _active.Add(-1);
+    }
+
+    /// <summary>Call after a todo is successfully completed.</summary>
+    public void RecordCompleted()
+    {
+        _completed.Add(1);
         _active.Add(-1);
     }
 
