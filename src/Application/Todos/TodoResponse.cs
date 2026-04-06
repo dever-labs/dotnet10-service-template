@@ -12,6 +12,9 @@ public sealed record TodoResponse(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt)
 {
-    public static TodoResponse FromTodo(Todo todo) =>
-        new(todo.Id, todo.Title, todo.Description, todo.Status.ToString(), todo.DueDate, todo.CreatedAt, todo.UpdatedAt);
+    public static TodoResponse FromTodo(Todo todo)
+    {
+        ArgumentNullException.ThrowIfNull(todo);
+        return new(todo.Id, todo.Title, todo.Description, todo.Status.ToString(), todo.DueDate, todo.CreatedAt, todo.UpdatedAt);
+    }
 }

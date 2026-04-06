@@ -1,8 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # Runs once after the dev container is created.
-# Installs tools not available as devcontainer features (kind, skaffold)
-# and restores .NET packages.
-set -euo pipefail
+# Installs tools (kind, mirrord) and restores .NET packages.
+set -eu
 
 echo ""
 echo "──────────────────────────────────────────"
@@ -20,22 +19,31 @@ else
   echo "→ kind already installed: $(kind version)"
 fi
 
-# ── skaffold ─────────────────────────────────────────────────────────────────
-if ! command -v skaffold &>/dev/null; then
-  echo "→ Installing skaffold (latest stable)..."
-  curl -sSLo /tmp/skaffold "https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64"
-  chmod +x /tmp/skaffold
-  sudo mv /tmp/skaffold /usr/local/bin/skaffold
+# ── mirrord ───────────────────────────────────────────────────────────────────
+# mirrord gives the local process cluster network access (DNS, services)
+# without deploying the app into k8s — run `make dev` to start with it.
+if ! command -v mirrord &>/dev/null; then
+  echo "→ Installing mirrord..."
+  curl -fsSL https://raw.githubusercontent.com/metalbear-co/mirrord/main/scripts/install.sh | bash
 else
-  echo "→ skaffold already installed: $(skaffold version)"
+  echo "→ mirrord already installed: $(mirrord --version)"
 fi
 
-# ── .NET ─────────────────────────────────────────────────────────────────────
+# ── .NET restore ──────────────────────────────────────────────────────────────
+# Try the org NuGet proxy first (nuget.config). Fall back to nuget.org when
+# the proxy is not yet configured — this lets the template work out of the box
+# before nuget.config is updated with the real org feed URL.
 echo "→ Restoring .NET packages..."
-dotnet restore
+if ! dotnet restore --ignore-failed-sources 2>/dev/null; then
+  echo "⚠  nuget.internal unreachable — falling back to nuget.org"
+  echo "   Update nuget.config with your org's NuGet proxy to remove this warning."
+  dotnet restore --source "https://api.nuget.org/v3/index.json"
+fi
 
 echo "→ Restoring .NET tools (dotnet-ef, reportgenerator)..."
-dotnet tool restore
+if ! dotnet tool restore 2>/dev/null; then
+  dotnet tool restore --add-source "https://api.nuget.org/v3/index.json"
+fi
 
 # ── Helm repos ────────────────────────────────────────────────────────────────
 echo "→ Adding Helm repositories..."
@@ -44,12 +52,13 @@ helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm
 helm repo update
 
 echo "→ Updating Helm chart dependencies..."
-helm dependency update deploy/helm/chart
+helm dependency update deploy/helm
 
 echo ""
 echo "✅ Dev container ready!"
 echo ""
 echo "   Next steps:"
 echo "     make cluster-create   — create local kind cluster + registry"
-echo "     make dev               — build, deploy & watch (skaffold dev)"
+echo "     make dev-deps          — deploy fake near-dependencies into the cluster"
+echo "     make dev               — run the API locally with cluster network access (mirrord)"
 echo ""

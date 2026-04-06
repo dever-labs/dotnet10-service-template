@@ -14,21 +14,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
           global-json-file: global.json
 
       - name: Restore NuGet packages
-        run: dotnet restore ServiceTemplate.slnx
+        run: dotnet restore ServiceTemplate.sln
 
       - name: Install dotnet tools
         run: dotnet tool restore
 
       - name: Build solution
-        run: dotnet build ServiceTemplate.slnx -c Release --no-restore
+        run: dotnet build ServiceTemplate.sln -c Release --no-restore
 
       - name: Verify unit tests pass
         run: dotnet test tests/UnitTests/ServiceTemplate.UnitTests.csproj --no-build -c Release
