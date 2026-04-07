@@ -5,13 +5,13 @@
 
   <ItemGroup>
     <!-- API / Web -->
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.17.0" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.1.4" />
 
     <!-- MCP Server (Model Context Protocol — Copilot agent mode tools) -->
     <PackageVersion Include="ModelContextProtocol" Version="0.2.0-preview.3" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.5" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.3" />
 
     <!-- Application -->
