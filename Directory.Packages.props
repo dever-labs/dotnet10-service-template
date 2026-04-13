@@ -7,7 +7,7 @@
     <!-- API / Web -->
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.17.0" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.1.4" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.13.22" />
 
     <!-- MCP Server (Model Context Protocol — Copilot agent mode tools) -->
     <PackageVersion Include="ModelContextProtocol" Version="1.2.0" />
