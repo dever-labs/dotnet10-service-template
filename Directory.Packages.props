@@ -11,7 +11,7 @@
 
     <!-- MCP Server (Model Context Protocol — Copilot agent mode tools) -->
     <PackageVersion Include="ModelContextProtocol" Version="1.2.0" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.5" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.6" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.5" />
 
     <!-- Application -->
