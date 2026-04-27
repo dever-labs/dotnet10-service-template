@@ -55,6 +55,6 @@
     <PackageVersion Include="Respawn" Version="7.0.0" />
 
     <!-- Security: pin transitive dependency to patched version (Dependabot alert #1 / CVE-2021-24112) -->
-    <PackageVersion Include="System.Drawing.Common" Version="10.0.6" />
+    <PackageVersion Include="System.Drawing.Common" Version="10.0.7" />
   </ItemGroup>
 </Project>
