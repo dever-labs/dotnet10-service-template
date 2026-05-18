@@ -18,7 +18,7 @@ dependencies:
   # Disable with: --set opentelemetry-collector.enabled=false
   # when a cluster-wide collector already exists.
   - name: opentelemetry-collector
-    version: 0.150.0
+    version: 0.156.0
     repository: https://open-telemetry.github.io/opentelemetry-helm-charts
     condition: opentelemetry-collector.enabled
 
