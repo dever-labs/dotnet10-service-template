@@ -70,16 +70,6 @@ cluster-status: ## Show cluster nodes, registry, and Helm release status
 fake: ## Start mockly fake server (http://localhost:8080, management UI: http://localhost:9090)
 	mockly start -c fake/mockly.yaml
 
-.PHONY: dev
-dev: ## Run the API locally with cluster network access via mirrord (requires: make cluster-create)
-	mirrord exec --config .mirrord/mirrord.json -- \
-		dotnet watch run --project $(SRC_API) --launch-profile Development
-
-.PHONY: dev-run
-dev-run: ## One-shot run without file watching
-	mirrord exec --config .mirrord/mirrord.json -- \
-		dotnet run --project $(SRC_API) --launch-profile Development
-
 # ── Build ──────────────────────────────────────────────────────────────────────
 .PHONY: build
 build: ## Build the solution (Release, warnings as errors)
@@ -95,9 +85,9 @@ docker-build: ## Build Docker image and push to local registry
 	docker push $(IMAGE):$(VERSION)
 	docker push $(IMAGE):local
 
-# ── Run (dotnet watch — no cluster needed) ────────────────────────────────────
+# ── Run ───────────────────────────────────────────────────────────────────────
 .PHONY: run
-run: ## Run the API with dotnet watch (needs local postgres port-forward or override)
+run: ## Run the API with hot reload (run 'make fake' first in another terminal)
 	dotnet watch run --project $(SRC_API) --launch-profile Development
 
 # ── Tests ──────────────────────────────────────────────────────────────────────

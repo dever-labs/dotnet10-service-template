@@ -53,12 +53,15 @@ This template follows **Clean Architecture** (also known as Onion Architecture):
 | .NET SDK | 10.0.x | [dotnet.microsoft.com](https://dotnet.microsoft.com/download) |
 | Docker Desktop | 4.x | [docker.com](https://www.docker.com/products/docker-desktop) |
 | `mockly` | latest | `go install github.com/dever-labs/mockly@latest` |
-| `kubectl` | any | [kubernetes.io](https://kubernetes.io/docs/tasks/tools/) |
-| `helm` | 3.x | [helm.sh](https://helm.sh/docs/intro/install/) |
 | `make` | any | `winget install GnuWin32.Make` (Windows) |
 | `git` | 2.x | [git-scm.com](https://git-scm.com) |
 
-**Optional (recommended):**
+**Optional (for Kubernetes / Helm workflows):**
+- `helm` 3.x — [helm.sh](https://helm.sh/docs/intro/install/)
+- `kind` 0.20+ — [kind.sigs.k8s.io](https://kind.sigs.k8s.io/docs/user/quick-start/)
+- `kubectl` — [kubernetes.io](https://kubernetes.io/docs/tasks/tools/)
+
+**Optional (editor):**
 - VS Code with the [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) extension
 - [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) for a fully containerised dev environment
 
