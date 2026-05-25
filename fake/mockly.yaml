@@ -1,0 +1,129 @@
+mockly:
+  ui:
+    enabled: true
+    port: 9090
+  api:
+    port: 9091
+
+protocols:
+  http:
+    enabled: true
+    port: 8080
+    mocks:
+
+      # ── Todos ────────────────────────────────────────────────────────────────
+
+      - id: list-todos
+        request:
+          method: GET
+          path: /api/todos
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body: |
+            {
+              "items": [
+                {
+                  "id": "{{uuid}}",
+                  "title": "{{fake "sentence"}}",
+                  "description": null,
+                  "status": "Pending",
+                  "dueDate": null,
+                  "createdAt": "{{now}}",
+                  "updatedAt": "{{now}}"
+                }
+              ],
+              "totalCount": 1,
+              "page": 1,
+              "pageSize": 20,
+              "totalPages": 1,
+              "hasPreviousPage": false,
+              "hasNextPage": false
+            }
+
+      - id: get-todo
+        request:
+          method: GET
+          path: re:^/api/todos/[0-9a-f-]{36}$
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body: |
+            {
+              "id": "{{uuid}}",
+              "title": "{{fake "sentence"}}",
+              "description": "{{fake "paragraph"}}",
+              "status": "Pending",
+              "dueDate": null,
+              "createdAt": "{{now}}",
+              "updatedAt": "{{now}}"
+            }
+
+      - id: create-todo
+        request:
+          method: POST
+          path: /api/todos
+        response:
+          status: 201
+          headers:
+            Content-Type: application/json
+          body: |
+            {
+              "id": "{{uuid}}",
+              "title": "{{fake "sentence"}}",
+              "description": null,
+              "status": "Pending",
+              "dueDate": null,
+              "createdAt": "{{now}}",
+              "updatedAt": "{{now}}"
+            }
+
+      - id: update-todo
+        request:
+          method: PUT
+          path: re:^/api/todos/[0-9a-f-]{36}$
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body: |
+            {
+              "id": "{{uuid}}",
+              "title": "{{fake "sentence"}}",
+              "description": null,
+              "status": "Pending",
+              "dueDate": null,
+              "createdAt": "{{now}}",
+              "updatedAt": "{{now}}"
+            }
+
+      - id: delete-todo
+        request:
+          method: DELETE
+          path: re:^/api/todos/[0-9a-f-]{36}$
+        response:
+          status: 204
+
+      # ── Health ────────────────────────────────────────────────────────────────
+
+      - id: health
+        request:
+          method: GET
+          path: /health
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body: '{"status":"ok"}'
+
+      - id: ready
+        request:
+          method: GET
+          path: /ready
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body: '{"status":"ok"}'

@@ -11,7 +11,6 @@ CLUSTER_NAME   := service-template
 REGISTRY       := localhost:5001
 IMAGE          := $(REGISTRY)/service-template
 HELM_CHART     := deploy/helm
-HELM_FAKE      := deploy/fake
 HELM_RELEASE   := service-template
 NAMESPACE      := default
 
@@ -41,7 +40,7 @@ setup: ## First-time setup: install tools, restore packages, add Helm repos
 	helm repo update
 	$(MAKE) helm-deps
 	@echo ""
-	@echo "✅ Setup complete! Next: make cluster-create && make dev"
+	@echo "✅ Setup complete! Next: make fake (in one terminal) && make run"
 
 # ── Cluster ────────────────────────────────────────────────────────────────────
 .PHONY: cluster-create
@@ -67,20 +66,12 @@ cluster-status: ## Show cluster nodes, registry, and Helm release status
 	@helm list -n $(NAMESPACE) 2>/dev/null || true
 
 # ── Dev loop ───────────────────────────────────────────────────────────────────
-.PHONY: dev-deps
-dev-deps: ## Deploy fake near-dependencies into local kind cluster
-	helm dependency update $(HELM_FAKE)
-	helm upgrade --install dev-deps $(HELM_FAKE) \
-		-f $(HELM_FAKE)/values.yaml \
-		--namespace $(NAMESPACE) \
-		--wait --timeout 5m
-
-.PHONY: dev-deps-delete
-dev-deps-delete: ## Remove fake near-dependencies from local cluster
-	helm uninstall dev-deps --namespace $(NAMESPACE) 2>/dev/null || true
+.PHONY: fake
+fake: ## Start mockly fake server (http://localhost:8080, management UI: http://localhost:9090)
+	mockly start -c fake/mockly.yaml
 
 .PHONY: dev
-dev: ## Run the API locally with cluster network access via mirrord (requires: make cluster-create && make dev-deps)
+dev: ## Run the API locally with cluster network access via mirrord (requires: make cluster-create)
 	mirrord exec --config .mirrord/mirrord.json -- \
 		dotnet watch run --project $(SRC_API) --launch-profile Development
 

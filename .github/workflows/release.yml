@@ -91,55 +91,11 @@ jobs:
           provenance: true
           sbom: true
 
-  # ── Build & Push Fake Docker image ──────────────────────────────────────────
-  docker-fake:
-    name: Build & Push Fake Docker Image
-    runs-on: ubuntu-latest
-    needs: test
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-fake
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha,prefix=sha-
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-
-      - name: Build and push
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
-        with:
-          context: fake/ServiceTemplate.Fake
-          file: fake/ServiceTemplate.Fake/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
   # ── Package & Push Helm Chart ────────────────────────────────────────────────
   helm:
     name: Package & Push Helm Chart
     runs-on: ubuntu-latest
-    needs: [docker, docker-fake]
+    needs: [docker]
     permissions:
       contents: read
       packages: write
@@ -167,25 +123,11 @@ jobs:
       - name: Push Helm chart
         run: helm push *.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/helm-charts
 
-      - name: Build fake chart
-        run: |
-          cp -r deploy/helm deploy-helm-fake
-          yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' \
-            deploy/helm/values.yaml deploy/helm/values-fake.yaml \
-            > deploy-helm-fake/values.yaml
-          rm deploy-helm-fake/values-fake.yaml
-          sed -i "s/tag: .*/tag: \"${{ steps.version.outputs.VERSION }}\"/" deploy-helm-fake/values.yaml
-          yq -i '.name = "service-template-fake"' deploy-helm-fake/Chart.yaml
-          helm package deploy-helm-fake --version ${{ steps.version.outputs.VERSION }} --app-version ${{ steps.version.outputs.VERSION }}
-
-      - name: Push fake Helm chart
-        run: helm push service-template-fake-*.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/helm-charts
-
   # ── Create GitHub Release ────────────────────────────────────────────────────
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [docker, docker-fake, helm]
+    needs: [docker, helm]
     permissions:
       contents: write
 

@@ -4,25 +4,11 @@ metadata:
   name: service-template
 
 # The app runs locally via `make dev` (mirrord + dotnet watch).
-# Skaffold is used only to manage the fake near-dependency lifecycle in the
-# local kind cluster. Run `make dev-deps` instead for simpler helm-only usage.
+# Use `make fake` to start the mockly fake server alongside it.
 
 build:
   artifacts: []
 
 deploy:
   helm:
-    releases:
-      - name: dev-deps
-        chartPath: deploy/fake
-        valuesFiles:
-          - deploy/fake/values.yaml
-        wait: true
-        skipBuildDependencies: false
-    flags:
-      install: ["--timeout=5m", "--atomic"]
-      upgrade: ["--timeout=5m", "--atomic", "--cleanup-on-fail"]
-
-# Port-forward fake services for tools that need localhost access (e.g. tests
-# running outside mirrord). Adjust ports to match deploy/fake/values.yaml.
-portForward: []
+    releases: []

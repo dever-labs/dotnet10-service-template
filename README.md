@@ -52,7 +52,7 @@ This template follows **Clean Architecture** (also known as Onion Architecture):
 |------|----------------|---------|
 | .NET SDK | 10.0.x | [dotnet.microsoft.com](https://dotnet.microsoft.com/download) |
 | Docker Desktop | 4.x | [docker.com](https://www.docker.com/products/docker-desktop) |
-| `kind` | 0.20+ | [kind.sigs.k8s.io](https://kind.sigs.k8s.io/docs/user/quick-start/) |
+| `mockly` | latest | `go install github.com/dever-labs/mockly@latest` |
 | `kubectl` | any | [kubernetes.io](https://kubernetes.io/docs/tasks/tools/) |
 | `helm` | 3.x | [helm.sh](https://helm.sh/docs/intro/install/) |
 | `make` | any | `winget install GnuWin32.Make` (Windows) |
@@ -75,27 +75,17 @@ git clone https://github.com/dever-labs/dotnet10-service-template.git && cd dotn
 # 2. One-command setup: installs tools, restores packages, adds Helm repos, downloads chart dependencies
 make setup
 
-# 3. Create a local kind cluster with a registry
-make cluster-create
+# 3. In one terminal: start the mockly fake server (mocks the Todo API dependency)
+make fake
 
-# 4. Deploy backing services (PostgreSQL, Seq, OTel Collector) into the cluster
-make dev-deps
-
-# 5. Run the API with hot reload (requires mirrord for cluster network access)
-make dev
+# 4. In another terminal: run the API with hot reload
+make run
 ```
 
 The API is now available at `http://localhost:5000`.
 - **Scalar API docs:** `http://localhost:5000/scalar`
 - **Health check:** `http://localhost:5000/health`
-
-### Option B — Unit / Integration tests only (no cluster needed)
-
-```bash
-make setup
-make test              # unit tests (no Docker)
-make test-integration  # real PostgreSQL via Testcontainers
-```
+- **Mockly UI:** `http://localhost:9090`
 
 ### Option C — Dev Container (zero-install)
 
@@ -121,7 +111,8 @@ make test-integration  # real PostgreSQL via Testcontainers
 ├── deploy/
 │   └── helm/                   # Helm chart (deployment, HPA, PDB, ingress...)
 ├── docs/                       # Architecture Decision Records and org policies
-├── fake/                       # Helm chart for fake near-dependencies (local dev)
+├── fake/
+│   └── mockly.yaml             # Mockly config — mock Todo API for local development
 ├── src/
 │   ├── Api/                    # ASP.NET Core Minimal API, Program.cs
 │   ├── Application/            # Custom CQRS (ISender/IRequestHandler), validators, DTOs
@@ -172,12 +163,18 @@ make migration NAME=AddUserTable
 make migration-rollback
 ```
 
+### Fake server (mockly)
+
+```bash
+make fake              # Start mockly (http://localhost:8080, UI at http://localhost:9090)
+```
+
+The `fake/mockly.yaml` file configures mock responses for all Todo API endpoints. Edit it to add new routes or change response shapes as the real API evolves.
+
 ### Infrastructure (local kind cluster)
 
 ```bash
 make cluster-create    # Create local kind cluster with Docker registry
-make dev-deps          # Deploy backing services (PostgreSQL, Seq, OTel Collector)
-make dev-deps-delete   # Remove backing services from cluster
 make cluster-delete    # Tear down the kind cluster
 make cluster-status    # Show nodes, registry and Helm release status
 ```
