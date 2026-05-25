@@ -18,13 +18,13 @@ dependencies:
   # Disable with: --set opentelemetry-collector.enabled=false
   # when a cluster-wide collector already exists.
   - name: opentelemetry-collector
-    version: 0.150.0
+    version: 0.156.2
     repository: https://open-telemetry.github.io/opentelemetry-helm-charts
     condition: opentelemetry-collector.enabled
 
   # PostgreSQL — enabled for local dev via values.local.yaml.
   # In production, disable this and supply the connection string via a Secret.
   - name: postgresql
-    version: 18.5.24
+    version: 18.6.7
     repository: https://charts.bitnami.com/bitnami
     condition: postgresql.enabled

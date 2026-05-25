@@ -2,8 +2,8 @@
 
 > Production-ready .NET 10 service template with Clean Architecture, Docker, Helm, and GitHub Actions CI/CD.
 
-[![CI](https://github.com/your-org/service-template/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/service-template/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/your-org/service-template/branch/main/graph/badge.svg)](https://codecov.io/gh/your-org/service-template)
+[![CI](https://github.com/dever-labs/dotnet10-service-template/actions/workflows/ci.yml/badge.svg)](https://github.com/dever-labs/dotnet10-service-template/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/dever-labs/dotnet10-service-template/branch/main/graph/badge.svg)](https://codecov.io/gh/dever-labs/dotnet10-service-template)
 
 ## Table of Contents
 
@@ -52,6 +52,9 @@ This template follows **Clean Architecture** (also known as Onion Architecture):
 |------|----------------|---------|
 | .NET SDK | 10.0.x | [dotnet.microsoft.com](https://dotnet.microsoft.com/download) |
 | Docker Desktop | 4.x | [docker.com](https://www.docker.com/products/docker-desktop) |
+| `kind` | 0.20+ | [kind.sigs.k8s.io](https://kind.sigs.k8s.io/docs/user/quick-start/) |
+| `kubectl` | any | [kubernetes.io](https://kubernetes.io/docs/tasks/tools/) |
+| `helm` | 3.x | [helm.sh](https://helm.sh/docs/intro/install/) |
 | `make` | any | `winget install GnuWin32.Make` (Windows) |
 | `git` | 2.x | [git-scm.com](https://git-scm.com) |
 
@@ -67,21 +70,34 @@ This template follows **Clean Architecture** (also known as Onion Architecture):
 
 ```bash
 # 1. Clone and enter the project
-git clone https://github.com/your-org/service-template.git && cd service-template
+git clone https://github.com/dever-labs/dotnet10-service-template.git && cd dotnet10-service-template
 
-# 2. One-command setup: installs tools, restores packages, starts infra, runs migrations
+# 2. One-command setup: installs tools, restores packages, adds Helm repos, downloads chart dependencies
 make setup
 
-# 3. Start the API with hot reload
-make run
+# 3. Create a local kind cluster with a registry
+make cluster-create
+
+# 4. Deploy backing services (PostgreSQL, Seq, OTel Collector) into the cluster
+make dev-deps
+
+# 5. Run the API with hot reload (requires mirrord for cluster network access)
+make dev
 ```
 
 The API is now available at `http://localhost:5000`.
 - **Scalar API docs:** `http://localhost:5000/scalar`
 - **Health check:** `http://localhost:5000/health`
-- **Seq logs:** `http://localhost:5341`
 
-### Option B — Dev Container (zero-install)
+### Option B — Unit / Integration tests only (no cluster needed)
+
+```bash
+make setup
+make test              # unit tests (no Docker)
+make test-integration  # real PostgreSQL via Testcontainers
+```
+
+### Option C — Dev Container (zero-install)
 
 1. Open the repository in VS Code
 2. When prompted, click **"Reopen in Container"**
@@ -103,25 +119,27 @@ The API is now available at `http://localhost:5000`.
 │   ├── CODEOWNERS
 │   └── pull_request_template.md
 ├── deploy/
-│   ├── helm/chart/             # Helm chart (deployment, HPA, PDB, ingress...)
-│   └── otel/                   # OpenTelemetry Collector config
-├── docs/adr/                   # Architecture Decision Records
+│   └── helm/                   # Helm chart (deployment, HPA, PDB, ingress...)
+├── docs/                       # Architecture Decision Records and org policies
+├── fake/                       # Helm chart for fake near-dependencies (local dev)
 ├── src/
 │   ├── Api/                    # ASP.NET Core Minimal API, Program.cs
 │   ├── Application/            # Custom CQRS (ISender/IRequestHandler), validators, DTOs
 │   ├── Domain/                 # Entities, domain errors, Result<T>
-│   └── Infrastructure/         # EF Core, PostgreSQL, repositories
+│   ├── Infrastructure/         # EF Core, PostgreSQL, repositories
+│   └── McpServer/              # MCP server exposing Todo API as Copilot agent tools
 ├── tests/
 │   ├── UnitTests/              # Fast, isolated, no I/O
 │   ├── IntegrationTests/       # Real DB via Testcontainers + Respawn
 │   └── AcceptanceTests/        # BDD-style HTTP API tests
-├── docker-compose.yml          # Full local stack
-├── docker-compose.override.yml # Local overrides (auto-applied by Docker Compose)
+├── scripts/                    # Helper scripts (kind cluster, migrations)
 ├── Dockerfile                  # Multi-stage production build
 ├── Directory.Build.props       # Shared MSBuild settings for all projects
 ├── Directory.Packages.props    # Central NuGet package version management
 ├── global.json                 # Pins .NET SDK version
 ├── Makefile                    # Developer task runner
+├── values.local.yaml           # Local Helm overrides
+├── values.staging.yaml         # Staging Helm overrides
 └── ServiceTemplate.sln
 ```
 
@@ -154,12 +172,14 @@ make migration NAME=AddUserTable
 make migration-rollback
 ```
 
-### Infrastructure (backing services only)
+### Infrastructure (local kind cluster)
 
 ```bash
-make infra-up    # Start Postgres + Seq + OTEL Collector
-make infra-down  # Stop them
-make infra-reset # Full reset — WARNING: deletes all data
+make cluster-create    # Create local kind cluster with Docker registry
+make dev-deps          # Deploy backing services (PostgreSQL, Seq, OTel Collector)
+make dev-deps-delete   # Remove backing services from cluster
+make cluster-delete    # Tear down the kind cluster
+make cluster-status    # Show nodes, registry and Helm release status
 ```
 
 ---
@@ -184,17 +204,8 @@ make coverage      # Unit tests + open HTML coverage report
 ## Docker
 
 ```bash
-# Build the image
+# Build the image and push to local registry
 make docker-build
-
-# Start the complete stack
-make docker-up
-
-# Tail logs
-make docker-logs
-
-# Stop everything
-make docker-down
 ```
 
 The multi-stage `Dockerfile` produces a minimal, non-root runtime image.
@@ -254,8 +265,8 @@ git push origin v1.2.3
 
 This triggers the release pipeline which will:
 1. Run all tests
-2. Build and push `ghcr.io/your-org/service-template:1.2.3`
-3. Push the Helm chart to `ghcr.io/your-org/helm-charts`
+2. Build and push `ghcr.io/dever-labs/dotnet10-service-template:1.2.3`
+3. Push the Helm chart to `ghcr.io/dever-labs/helm-charts`
 4. Create a GitHub Release with auto-generated notes
 
 ---
@@ -266,7 +277,7 @@ To use this as a starting point for a new service named `PaymentService`:
 
 ```bash
 # 1. Clone
-git clone https://github.com/your-org/service-template.git payment-service
+git clone https://github.com/dever-labs/dotnet10-service-template.git payment-service
 cd payment-service
 
 # 2. Bulk rename (Linux/macOS)
