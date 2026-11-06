@@ -1,0 +1,40 @@
+# Describes this repository in devhub (https://hub.dever.dk), dever-labs'
+# developer portal. devhub's GitHub discovery reads this file from the
+# default branch; docs come from docs/ (backstage.io/techdocs-ref).
+# devhub's "New .NET service" template copies this repository and adds its
+# own catalog-info.yaml, mkdocs.yml and docs/index.md to the new repo.
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: templates
+  namespace: devtools
+  title: Templates
+  description: Starter repositories that devhub's software templates copy.
+  annotations:
+    github.com/project-slug: dever-labs/dotnet10-service-template
+  links:
+    - url: https://hub.dever.dk/create
+      title: Create something new
+spec:
+  owner: group:devtools/engineering
+  domain: domain:devtools/devtools
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: dotnet10-service-template
+  namespace: devtools
+  title: .NET 10 service template
+  description: >
+    Clean Architecture .NET 10 service starter — minimal APIs, custom CQRS,
+    EF Core + PostgreSQL, OpenTelemetry, Testcontainers, Docker, Helm and
+    GitHub Actions CI/CD.
+  annotations:
+    github.com/project-slug: dever-labs/dotnet10-service-template
+    backstage.io/techdocs-ref: dir:.
+  tags: [dotnet, csharp]
+spec:
+  type: template
+  lifecycle: production
+  owner: group:devtools/engineering
+  system: system:devtools/templates
